@@ -83,6 +83,11 @@
         <version>3.1</version>
     </dependency>
     <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.2.3</version>
+    </dependency>
+    <dependency>
         <groupId>eu.socialsensor</groupId>
         <artifactId>topic-detection</artifactId>
         <version>0.2-SNAPSHOT</version>
