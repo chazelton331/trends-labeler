@@ -1,14 +1,45 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>eu.socialsensor</groupId>
-  <artifactId>TrendaLabeler</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <groupId>eu.socialsensor</groupId>
+    <artifactId>trends-labeler</artifactId>
+    <version>0.2-SNAPSHOT</version>
+    <packaging>jar</packaging>
+        
+    <name>trends-labeler</name>
+    <url>https://github.com/socialsensor/trends-labeler/</url>
+    <description>
+            A set of methods for automatically extracting a title for a DySCO
+    </description>
+    
+        <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+    
+    <developers>
+        <developer>
+            <id>gpetkos</id>
+            <name>Giorgos Petkos</name>
+            <email>gpetkos@iti.gr</email>
+        </developer>
+    </developers>
 
-  <name>TrendsLabeler</name>
-  <url>http://maven.apache.org</url>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+          
+    <scm>
+        <connection>scm:git:git@github.com:socialsensor/trends-labeler.git</connection>
+        <developerConnection>scm:git:git@github.com:socialsensor/trends-labeler.git</developerConnection>
+        <url>git@github.com:socialsensor/trends-labeler.git</url>
+    </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -91,4 +122,41 @@
             </snapshots>
         </repository>
     </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>      
+        </plugins>
+   </build>
 </project>
