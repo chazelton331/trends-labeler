@@ -277,6 +277,7 @@ public class TrendsLabeler {
 //        Logger.getRootLogger().info("Title extractor : Examining case 1 (getting title from most popular url)");
         //Case 1, there are urls that point to a webpage that has a title
         //        pick the title of the most popular page.
+        /*
         Map<String,Integer> url_counts=new HashMap<String,Integer>();
 //        Logger.getRootLogger().info("Title extractor  (case 1) : finding most popular URL");
         for(Item item_tmp:items){
@@ -345,7 +346,6 @@ public class TrendsLabeler {
                 }
             }
         }
-        /*
 */        
         
         
