@@ -59,10 +59,10 @@ public class URLDeshortener {
             connection.setInstanceFollowRedirects(false);
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(10000);
-            Logger.getRootLogger().info("Title extractor  (case 1) : connecting ("+url_str+")");
+//            Logger.getRootLogger().info("Title extractor  (case 1) : connecting ("+url_str+")");
             connection.connect();
             expandedURL = connection.getHeaderField("Location");
-            Logger.getRootLogger().info("Title extractor  (case 1) : closing connection");
+  //          Logger.getRootLogger().info("Title extractor  (case 1) : closing connection");
 //            connection.getInputStream().close(); 
         }
         catch(Exception ex){

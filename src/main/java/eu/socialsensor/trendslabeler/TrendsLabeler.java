@@ -274,7 +274,6 @@ public class TrendsLabeler {
     //THIS IS THE NEWEST VERSION 
     public static String findPopularTitle(Dysco dysco){
         List<Item> items=dysco.getItems();
-        /*
 //        Logger.getRootLogger().info("Title extractor : Examining case 1 (getting title from most popular url)");
         //Case 1, there are urls that point to a webpage that has a title
         //        pick the title of the most popular page.
@@ -299,9 +298,9 @@ public class TrendsLabeler {
                     }
                 }
             }
-            Logger.getRootLogger().info("Title extractor  (case 1) : expanded, will now count");
+//            Logger.getRootLogger().info("Title extractor  (case 1) : expanded, will now count");
         }
-        Logger.getRootLogger().info("Title extractor  (case 1) : found most popular URL");
+  //      Logger.getRootLogger().info("Title extractor  (case 1) : found most popular URL");
         if (url_counts.size()>0){
             int maximum=Integer.MIN_VALUE;
             String most_popular_url=null;
@@ -312,7 +311,7 @@ public class TrendsLabeler {
                 }
             }
             if(most_popular_url!=null){
-                Logger.getRootLogger().info("Title extractor  (case 1) : fetching title from most popular url");
+    //            Logger.getRootLogger().info("Title extractor  (case 1) : fetching title from most popular url");
                 String candidate_title=grabTitleFromURL(most_popular_url);
                 candidate_title=StringEscapeUtils.unescapeHtml(candidate_title);
                 if ((candidate_title!=null)&&(!candidate_title.equals(""))){
@@ -325,7 +324,7 @@ public class TrendsLabeler {
                                 candidate_title=parts1[p];
                             }
                                 
-                        Logger.getRootLogger().info("Title extractor  (case 1) : cleaning candidate title");
+      //                  Logger.getRootLogger().info("Title extractor  (case 1) : cleaning candidate title");
                         candidate_title=cleanTitleFromCommonMediaNames(candidate_title);
                         Logger.getRootLogger().info("Title extractor  (case 1) : getting site name");
                         String mediaName=getSiteNameFromURL(most_popular_url).toLowerCase();
@@ -346,6 +345,7 @@ public class TrendsLabeler {
                 }
             }
         }
+        /*
 */        
         
         
