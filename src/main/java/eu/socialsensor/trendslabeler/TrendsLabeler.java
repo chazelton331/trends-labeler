@@ -78,7 +78,26 @@ public class TrendsLabeler {
     
     public static final Set<String> BREAKING_ACCOUNTS = new HashSet<String>(Arrays.asList(BREAKING_ARRAY));    
     public static double url_threshold_similarity=0.2;
+
+    public static void main(String[] args){
+        ItemDAO itemdao=null;
+        try {
+            itemdao = new ItemDAOImpl("social1.atc.gr");
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(TrendsLabeler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        List<Item> items=itemdao.getLatestItems(1000);
+        Set<String> entities=new HashSet<String>();
+        for(Item item:items){
+            List<String> sentences=getSentences1(item.getTitle(),entities);
+            //for(String sentence:sentences)
+                //System.out.println(sentence);
+        }
+        
+    }
     
+    
+    /*
     public static void main(String[] args) {
         
         DyscoDAO dyscoDAO=null;
@@ -159,7 +178,6 @@ public class TrendsLabeler {
             e.printStackTrace();
         }
     }
-    /*
     */
     
     static Extractor extr = new Extractor();
@@ -916,8 +934,9 @@ public class TrendsLabeler {
 //            List<String> sentences_tmp=new ArrayList<String>();
             Reader reader = new StringReader(text_cleaned);
             DocumentPreprocessor dp = new DocumentPreprocessor(reader);
-            dp.setTokenizerFactory(PTBTokenizerFactory.newWordTokenizerFactory("ptb3Escaping=false"));
-            
+            dp.setTokenizerFactory(PTBTokenizerFactory.newWordTokenizerFactory("ptb3Escaping=false,untokenizable=noneDelete"));
+                    //prop.setProperty("tokenizerOptions", "untokenizable=noneDelete");
+
             Iterator<List<HasWord>> it = dp.iterator();
             while (it.hasNext()) {
                 StringBuilder sentenceSb = new StringBuilder();
