@@ -407,13 +407,13 @@ public class TrendsLabeler {
         List<Entity> ents=dysco.getEntities();
         for(Entity ent:ents)
             entities.add(ent.getName());
-        Logger.getRootLogger().info("Title extractor (case 3): Getting candidate sentences");
+//        Logger.getRootLogger().info("Title extractor (case 3): Getting candidate sentences");
         for(Item item_tmp:items){
             List<String> sentences=getSentences1(item_tmp.getTitle(),entities);
             textItems.addAll(sentences);
         }
             
-        Logger.getRootLogger().info("Title extractor (case 3): Finding most popular sentence");
+//        Logger.getRootLogger().info("Title extractor (case 3): Finding most popular sentence");
         String title=findPopularTitleNew(textItems);
         if(((title==null)||(title.trim().length()==0))&&(textItems.size()>0))
             title=extractor.cleanText(textItems.get(0));       
