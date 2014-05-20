@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package eu.socialsensor.trendslabeler;
 
 import java.io.IOException;
@@ -128,6 +124,9 @@ public class Extractor {
 
     public static final String hashtagRegExp =
     "(?:^|\\s|[\\p{Punct}&&[^/]])(#[\\p{L}0-9-_\\p{P}]+)";
+	
+	public static final String hashtagRegExpMR =
+    "(?:^|\\s|[\\p{Punct}&&[^/]])(#[\\p{L}0-9-_\\p{P}]+(\\p{Punct}*))";
 
     public static final String usermentionRegExp =
     "([\\s“'`\"])*((by)|(via)|(according to)|(from))?(?:^|\\s|[\\p{Punct}&&[^/]“])(@[\\p{L}0-9-_\\p{P}]+)(['`\"“])*"; 
@@ -143,7 +142,11 @@ public class Extractor {
     Pattern.compile(hashtagRegExp);
 
     private static final Pattern usermentionPattern =
-    Pattern.compile(usermentionRegExp);     
+    Pattern.compile(usermentionRegExp);  
+ 
+	private static Pattern unicodeOutliers = Pattern.compile("[^\\x00-\\x7F]",
+        Pattern.UNICODE_CASE | Pattern.CANON_EQ
+        | Pattern.CASE_INSENSITIVE);	
     
     
     /*
@@ -254,11 +257,11 @@ public class Extractor {
         }
 
 // Performance optimization.
-// If text doesn't contain @/＠ at all, the text doesn't
+// If text doesn't contain @/@ at all, the text doesn't
 // contain @mention. So we can simply return an empty list.
         boolean found = false;
         for (char c : text.toCharArray()) {
-            if (c == '@' || c == '＠') {
+            if (c == '@' || c == '@') {
                 found = true;
                 break;
             }
@@ -312,6 +315,87 @@ public class Extractor {
             return null;
         }
     }
+	
+	public String extractReplyScreennameByMR(String text) {
+		if (text == null) {
+			return null;
+		}
+				
+		Matcher matcher = Regex.VALID_RETWEET_MODIFIED_TWEET_BY_MR.matcher(text);
+		if (matcher.find()) {
+			String newText = matcher.replaceAll("");
+			return newText.replaceAll("\\s{2,}"," ");
+		} else {
+			return text;
+		}
+	}
+	
+	public String keepUsernamesWithApostrophe(String text){
+    	if (text == null)
+    		return null;
+    	
+    	Pattern p = Pattern.compile("\\s*(\\@|\\#)\\w+\\s{0,1}\\'(s|\\s)"); //but this may keep usernames/hashtags included in single apostrophes
+		Matcher matcher = p.matcher(text);
+		while (matcher.find()) {
+			String textToKeep = matcher.group().replaceAll("\\s", "");
+			if (textToKeep.contains("@"))
+				textToKeep = textToKeep.replaceAll("@", "");
+			else if (textToKeep.contains("#"))
+				textToKeep = textToKeep.replaceAll("#", "");
+			text = matcher.replaceFirst(" " + textToKeep + " ");
+			matcher = p.matcher(text);
+		}
+		return text.replaceAll("\\s{2,}", " ");
+    }
+	
+	public String keepUsernamesAndHashtagsWithPrepositions(String text) {
+    	if (text == null)
+    		return null;
+    	
+    	String[] prepositions = {"in", "for", "on", "at", "to", "the", "about", "over"}; //some additional that cause problems are by, from
+
+    	
+    	for (String preposition: prepositions){
+    		preposition = "(" + preposition + "|" + preposition.substring(0, 1).toUpperCase() + preposition.substring(1) + ")";
+    		Pattern p = Pattern.compile("\\s" + preposition + "\\s(\\@|\\#)\\w+(\\s|\\p{Punct})");
+    		Matcher matcher = p.matcher(text);
+    		while (matcher.find()) {
+    			String textToKeep = matcher.group().replaceAll("(\\s|\\p{Punct})", " ").trim();
+//    			if (textToKeep.contains("@"))
+//    				textToKeep = textToKeep.replaceAll("@", " ");
+//    			else if (textToKeep.contains("#"))
+//    				textToKeep = textToKeep.replaceAll("#", " ");
+    			String punctAll = matcher.group();
+    			String punctEnd = punctAll.substring(punctAll.length()-1, punctAll.length());
+    			if (punctEnd!=" ")
+    				text = matcher.replaceFirst(" " + textToKeep + punctEnd);
+    			else
+    				text = matcher.replaceFirst(" " + textToKeep + " ");
+    			matcher = p.matcher(text);
+    		}
+    	}	
+    	String[] additional_prepositions = {"by", "from", "of"};
+    	
+    	for (String preposition: additional_prepositions){
+    		preposition = "(" + preposition + "|" + preposition.substring(0, 1).toUpperCase() + preposition.substring(1) + ")";
+    		Pattern p = Pattern.compile("\\s" + preposition + "\\s(\\#)\\w+(\\s|\\p{Punct})");
+    		Matcher matcher = p.matcher(text);
+    		while (matcher.find()) {
+    			String textToKeep = matcher.group().replaceAll("(\\s|\\p{Punct})", " ").trim();
+    			String punctAll = matcher.group();
+    			String punctEnd = punctAll.substring(punctAll.length()-1, punctAll.length());
+    			if (punctEnd!=" ")
+    				text = matcher.replaceFirst(" " + textToKeep + punctEnd);
+    			else
+    				text = matcher.replaceFirst(" " + textToKeep + " ");
+    			matcher = p.matcher(text);
+    		}
+    	}	  	
+    	
+    	
+		return text.replaceAll("\\s{2,}", " ");
+	}
+
 
     /**
      * Extract URL references from Tweet text.
@@ -417,11 +501,11 @@ public class Extractor {
         }
 
 // Performance optimization.
-// If text doesn't contain #/＃ at all, text doesn't contain
+// If text doesn't contain #/# at all, text doesn't contain
 // hashtag, so we can simply return an empty list.
         boolean found = false;
         for (char c : text.toCharArray()) {
-            if (c == '#' || c == '＃') {
+            if (c == '#' || c == '#') {
                 found = true;
                 break;
             }
@@ -566,6 +650,17 @@ public class Extractor {
         }
         return text;
     }
+	
+	    public String removeHashtags(String text) {
+    	
+    	if (text!=null)
+    		text = text.replaceAll(hashtagRegExpMR, "");
+//		List<String> hashtags = extractHashtags(text);
+//		for (String hashtag : hashtags) {
+//			text = text.replace("#" + hashtag, "");
+//		}
+		return text;
+	}
 
     public String removeScreennames(String text) {
         List<String> screen_names = this.extractMentionedScreennames(text);
@@ -573,6 +668,36 @@ public class Extractor {
             text = text.replace("@" + screen_name, " ");
         }
         return text;
+    }
+	
+	public String removeMultiplePunctuation(String text){
+//		String rx = "(([^a-zA-Z0-9@#$\\s]){2,})";
+		String rx = "([^\\w\\s\\/])\\1+"; //any repeated same (\\1 - group) symbol except \s and // (for http)
+//		String rx = "([^\\w\\/])\\1+"; //any repeated same (\\1 - group) symbol except \s and // (for http)
+
+		Pattern pattern = Pattern.compile(rx);
+		Matcher matcher = pattern.matcher(text);
+		
+		String currentSymbol = null;
+		String replacement = null;
+		
+//		System.out.println("before:" + text);
+		
+		while (matcher.find()) {
+			String extractingSymbols = matcher.group().replaceAll("\\s", "");
+//			System.out.println("Extracting symbols " + extractingSymbols);
+			currentSymbol = extractingSymbols.substring(
+					extractingSymbols.length() - 2,
+					extractingSymbols.length() - 1);
+			replacement = currentSymbol + " ";
+			if (currentSymbol.equals("$")) // either wise it throws Illegal Argument Exception 
+				replacement = " ";
+			text = matcher.replaceFirst(replacement);
+			matcher = matcher.reset(text);
+		}
+		text = text.replaceAll("\\s+", " ");
+//		System.out.println("after:" + text);
+		return text; 	
     }
 
     public String cleanText(String text) {

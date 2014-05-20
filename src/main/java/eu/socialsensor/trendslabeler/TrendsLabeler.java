@@ -23,9 +23,11 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.WebPage;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.String;
@@ -33,11 +35,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
+
 import java.util.logging.Level;
+
 import org.apache.log4j.Logger;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
@@ -51,26 +58,38 @@ import uk.ac.shef.wit.simmetrics.similaritymetrics.AbstractStringMetric;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 
 public class TrendsLabeler {
-
-    public static final String[] BREAKING_ARRAY = new String[] { "6017542", 
-        "5402612","428333","23484039","15108702","18767649","18424289","87416722","384438102",
-"87416722","7587032","361501426","612473","14138785","15012486","11014272","14569869","354267800",
-"48833593","807095","7587032", "113050195","15110357","7905122",
-"16672510","788524","10977192","14138785","138387125","19656220","19536881"};
+	
+	
+	//	public static final String[] BREAKING_ARRAY = new String[] { 
+	//		"6017542", "5402612", "428333", 
+	//		"23484039", "15108702", "18767649",
+	//		"18424289", "87416722", "384438102", 
+	//		"7587032", "361501426", "612473", 
+	//		"14138785", "15012486", "11014272",
+	//		"14569869", "354267800", "48833593", 
+	//		"807095", "7587032", "113050195", 
+	//		"15110357", "7905122", "16672510", 
+	//		"788524", "10977192", "14138785", 
+	//		"138387125", "19656220", "19536881"
+	//	};
 
     static{
         System.setProperty ("sun.net.client.defaultReadTimeout", "7000");
         System.setProperty ("sun.net.client.defaultConnectTimeout", "7000");
     }
     
-    /*
-    public static final String[] BREAKING_ARRAY = new String[] {"BreakingNews", 
-    "BBCBreaking","cnnbrk","WSJbreakingnews","ReutersLive","CBSTopNews","AJELive",
-"SkyNewsBreak","ABCNewsLive","SkyNewsBreak","SkyNews","BreakingNewsUK","BBCNews","TelegraphNews",
-"CBSNews","ftfinancenews","Channel4News","5_News","24HOfNews","nytimes",
-"SkyNews","skynewsbiz","ReutersBiz","guardiantech","mediaguardian",
-"guardiannews","fttechnews","telegraphnews","telegraphsport","telegraphbooks","telefinance"  };
-     */
+    public static final String[] BREAKING_ARRAY = new String[]{
+		"BreakingNews", "BBCBreaking", "cnnbrk", 
+		"WSJbreakingnews", "ReutersLive", "CBSTopNews", 
+		"AJELive", "SkyNewsBreak", "ABCNewsLive",
+		"SkyNews", "BreakingNewsUK", "BBCNews", 
+		"TelegraphNews", "CBSNews", "ftfinancenews", 
+		"Channel4News", "5_News", "24HOfNews", 
+		"nytimes", "SkyNews", "skynewsbiz", 
+		"ReutersBiz", "guardiantech", "mediaguardian", 
+		"guardiannews", "fttechnews", "telegraphnews", 
+		"telegraphsport", "telegraphbooks", "telefinance" 
+	};
 
     public static final String titleSeparators="[|-]";
     public static final double thresholdMediaName=0.3;
@@ -79,7 +98,7 @@ public class TrendsLabeler {
     public static final Set<String> BREAKING_ACCOUNTS = new HashSet<String>(Arrays.asList(BREAKING_ARRAY));    
     public static double url_threshold_similarity=0.2;
 
-    public static void main(String[] args){
+    /*public static void main(String[] args){
         ItemDAO itemdao=null;
         try {
             itemdao = new ItemDAOImpl("social1.atc.gr");
@@ -94,7 +113,7 @@ public class TrendsLabeler {
                 //System.out.println(sentence);
         }
         
-    }
+    }*/
     
     
     /*
@@ -216,7 +235,7 @@ public class TrendsLabeler {
         Map<String,List<String>> perURLitems=new HashMap<String,List<String>>();
         ArrayList<Set<String>> cleanedTokens=new ArrayList<Set<String>>();
         for(Item item_tmp:items){
-            List<String> sentences=getSentences1(item_tmp.getTitle(),entities);
+            List<String> sentences=getSentences1_old(item_tmp.getTitle(),entities);
             textItems.addAll(sentences);
             for(String sentence:sentences){
                 cleanedTokens.add(tokenizeClean(sentence));
@@ -239,7 +258,7 @@ public class TrendsLabeler {
                         List<String> key_elements=grabKeyElementsFromURL(tmp_url_str);
                         List<String> new_cands=new ArrayList<String>();
                         for(String tmp_cand:key_elements){
-                            List<String> tmp_sentences=getSentences1(tmp_cand,entities);
+                            List<String> tmp_sentences=getSentences1_old(tmp_cand,entities);
                             new_cands.addAll(tmp_sentences);
                         }
                         perURLitems.put(tmp_url_str, new_cands);
@@ -289,25 +308,24 @@ public class TrendsLabeler {
     }
     
     
-    //THIS IS THE NEWEST VERSION 
-    public static String findPopularTitle(Dysco dysco){
+    public static String findPopularTitle_old(Dysco dysco){
         List<Item> items=dysco.getItems();
-//        Logger.getRootLogger().info("Title extractor : Examining case 1 (getting title from most popular url)");
-        //Case 1, there are urls that point to a webpage that has a title
-        //        pick the title of the most popular page.
-        /*
+        // Logger.getRootLogger().info("Title extractor : Examining case 1 (getting title from most popular url)");
+        // Case 1, there are urls that point to a webpage that has a title
+        // pick the title of the most popular page.
+        
         Map<String,Integer> url_counts=new HashMap<String,Integer>();
-//        Logger.getRootLogger().info("Title extractor  (case 1) : finding most popular URL");
-        for(Item item_tmp:items){
+        // Logger.getRootLogger().info("Title extractor  (case 1) : finding most popular URL");
+        for (Item item_tmp:items){
             URL[] tmp_urls=item_tmp.getLinks();
-//            Logger.getRootLogger().info("Title extractor  (case 1) : got list of urls will now expand");
-            if(tmp_urls!=null){
-                for(int i=0;i<tmp_urls.length;i++){
+            // Logger.getRootLogger().info("Title extractor  (case 1) : got list of urls will now expand");
+            if (tmp_urls!=null){
+                for (int i=0;i<tmp_urls.length;i++){
                     String resolved=null;
-  //                  Logger.getRootLogger().info("Title extractor  (case 1) : will now expand" + tmp_urls[i].toString());
-//                    resolved = URLDeshortener.expandFast(tmp_urls[i].toString());
+					// Logger.getRootLogger().info("Title extractor  (case 1) : will now expand" + tmp_urls[i].toString());
+                    resolved = URLDeshortener.expandFast(tmp_urls[i].toString());
                     resolved = tmp_urls[i].toString();
-    //                Logger.getRootLogger().info("Title extractor  (case 1) : expanded"+tmp_urls[i].toString());
+                    // Logger.getRootLogger().info("Title extractor  (case 1) : expanded"+tmp_urls[i].toString());
                     if(resolved!=null){
                         Integer count=url_counts.get(resolved);
                         if(count == null)
@@ -317,20 +335,20 @@ public class TrendsLabeler {
                     }
                 }
             }
-//            Logger.getRootLogger().info("Title extractor  (case 1) : expanded, will now count");
+            // Logger.getRootLogger().info("Title extractor  (case 1) : expanded, will now count");
         }
-  //      Logger.getRootLogger().info("Title extractor  (case 1) : found most popular URL");
+        // Logger.getRootLogger().info("Title extractor  (case 1) : found most popular URL");
         if (url_counts.size()>0){
             int maximum=Integer.MIN_VALUE;
             String most_popular_url=null;
-            for(Entry<String,Integer> tmp_entry:url_counts.entrySet()){
-                if(tmp_entry.getValue()>maximum){
+            for (Entry<String,Integer> tmp_entry:url_counts.entrySet()){
+                if (tmp_entry.getValue()>maximum){
                     maximum=tmp_entry.getValue();
                     most_popular_url=tmp_entry.getKey();
                 }
             }
-            if(most_popular_url!=null){
-    //            Logger.getRootLogger().info("Title extractor  (case 1) : fetching title from most popular url");
+            if (most_popular_url!=null){
+                // Logger.getRootLogger().info("Title extractor  (case 1) : fetching title from most popular url");
                 String candidate_title=grabTitleFromURL(most_popular_url);
                 candidate_title=StringEscapeUtils.unescapeHtml(candidate_title);
                 if ((candidate_title!=null)&&(!candidate_title.equals(""))){
@@ -343,12 +361,13 @@ public class TrendsLabeler {
                                 candidate_title=parts1[p];
                             }
                                 
-      //                  Logger.getRootLogger().info("Title extractor  (case 1) : cleaning candidate title");
+                        // Logger.getRootLogger().info("Title extractor  (case 1) : cleaning candidate title");
                         candidate_title=cleanTitleFromCommonMediaNames(candidate_title);
-                        Logger.getRootLogger().info("Title extractor  (case 1) : getting site name");
+                        // Logger.getRootLogger().info("Title extractor  (case 1) : getting site name");
                         String mediaName=getSiteNameFromURL(most_popular_url).toLowerCase();
                         String[] titleParts=candidate_title.split(titleSeparators);
                         candidate_title="";
+						
                         AbstractStringMetric metric = new Levenshtein();
                         for(int i=0;i<titleParts.length;i++){
                             String next_part=titleParts[i].trim();
@@ -364,10 +383,10 @@ public class TrendsLabeler {
                 }
             }
         }
-*/        
         
         
-   //     Logger.getRootLogger().info("Title extractor : Examining case 2 (message posted by listed user)");
+        
+        // Logger.getRootLogger().info("Title extractor : Examining case 2 (message posted by listed user)");
         Set<String> entities=new HashSet<String>();
         List<Entity> ents=dysco.getEntities();
         for(Entity ent:ents)
@@ -375,9 +394,10 @@ public class TrendsLabeler {
         for(Item item_tmp:items){
             if(BREAKING_ACCOUNTS.contains(item_tmp.getAuthorScreenName())){
                 String candidate_title=item_tmp.getTitle();
-                List<String> parts=getSentences1(candidate_title,entities);
+                List<String> parts=getSentences1_old(candidate_title,entities);
                 candidate_title="";
-                for(String part:parts) candidate_title=candidate_title+" "+part;
+                for(String part:parts) 
+					candidate_title=candidate_title+" "+part;
                 candidate_title=candidate_title.trim();
                 candidate_title=StringEscapeUtils.unescapeHtml(candidate_title);
                 if(candidate_title.endsWith(":"))
@@ -389,8 +409,8 @@ public class TrendsLabeler {
             }
         }
         
-        //Case 3, default certh procedure: finding most popular sentence in all tweets
-     //   Logger.getRootLogger().info("Title extractor : Examining case 3 (most popular sentence)");
+        // Case 3, default CERTH procedure: finding most popular sentence in all tweets
+        // Logger.getRootLogger().info("Title extractor : Examining case 3 (most popular sentence)");
         String candidate_title=findPopularTitleCERTH(dysco);
         candidate_title=StringEscapeUtils.unescapeHtml(candidate_title);
         if(candidate_title.endsWith(":"))
@@ -399,8 +419,267 @@ public class TrendsLabeler {
     
     }
 
-    
-    public static String findPopularTitleCERTH(Dysco dysco){
+    public static String findPopularTitle(Dysco dysco) throws MalformedURLException {
+		
+		char firstChar;
+		
+		List<Item> items = dysco.getItems();
+		Extractor extractor = new Extractor();
+		
+		for (Item item : items) {
+			URL[] itemURL = item.getLinks();
+			if (itemURL.length == 0) {
+				String itemText = item.getTitle();
+	
+				// preprocess to text so as to remove urls with &hellip; at the
+				// end --> incomplete URLS
+				itemText = StringEscapeUtils.escapeHtml(itemText);
+				itemText = itemText.replaceAll("http\\:*.*&hellip;\\z", "");
+				itemText = itemText.replaceAll("-\\s*\\z", "");
+				itemText = itemText.replaceAll("&hellip;\\z", "");
+				itemText = StringEscapeUtils.unescapeHtml(itemText);
+	
+				extractor.setExtractURLWithoutProtocol(false); // in order to
+																// not extract
+																// URLs without
+																// protocol
+				List<String> extractedURLs = extractor.extractURLs(itemText);
+				if (!extractedURLs.isEmpty()) {
+					itemURL = new URL[extractedURLs.size()];
+					int index = 0;
+					for (String extractedURL : extractedURLs) {
+						URL extrURL = new URL(extractedURL);
+						itemURL[index] = extrURL;
+						index++;
+					}
+				}
+				item.setLinks(itemURL);
+			}
+		}
+		extractor.setExtractURLWithoutProtocol(true);
+		
+		
+		// Case 1
+		// Logger.getRootLogger()
+				// .info("Title extractor : Examining case 1 (getting title from most popular url)"); 
+		Map<String, Integer> url_counts = new HashMap<String, Integer>();
+		// Logger.getRootLogger().info(
+				// "Title extractor  (case 1) : finding most popular URL");
+		
+		long lStartTime = System.currentTimeMillis();
+		
+		int urlCounter = 0;
+		
+		for (Item item_tmp : items) {
+			URL[] tmp_urls = item_tmp.getLinks();
+			// Logger.getRootLogger()
+					// .info("Title extractor  (case 1) : got list of urls will now expand");
+			if (tmp_urls != null) {
+				urlCounter++;
+				for (int i = 0; i < tmp_urls.length; i++) {
+					String resolved = null;
+//					Logger.getRootLogger().info(
+//							"Title extractor  (case 1) : will now expand "
+//									+ tmp_urls[i].toString());
+//					resolved = URLDeshortener
+//							.expandFast(tmp_urls[i].toString()); //URL expansion should be disabled
+					resolved = tmp_urls[i].toString();
+					
+					if (resolved != null) {
+//						Logger.getRootLogger().info(
+//								"Title extractor  (case 1) : expanded "
+//										+ resolved.toString());
+						Integer count = url_counts.get(resolved);
+						if (count == null)
+							url_counts.put(resolved, 1);
+						else
+							url_counts.put(resolved, count + 1);
+					}
+				}
+			}
+//			Logger.getRootLogger().info(
+//					"Title extractor  (case 1) : expanded, will now count");
+		}
+//		Logger.getRootLogger().info(
+//				"Title extractor  (case 1) : found most popular URL");		
+		
+		long lEndTime = System.currentTimeMillis();
+		long difference = lEndTime - lStartTime;
+		
+//		System.out.println("Time elapsed while " + urlCounter + " no of URLs were expanded          : "
+//				+ difference);
+		
+		String fall_back_case1 = null;
+		
+		if (url_counts.size() > 0) {
+			int maximum = Integer.MIN_VALUE;
+			String most_popular_url = null;
+			for (Entry<String, Integer> tmp_entry : url_counts.entrySet()) {
+				if (tmp_entry.getValue() > maximum) {
+					maximum = tmp_entry.getValue();
+					most_popular_url = tmp_entry.getKey();
+				}
+			}
+
+			if (most_popular_url != null) {
+//				Logger.getRootLogger()
+//						.info("Title extractor  (case 1) : fetching title from most popular url");	
+				
+				String candidate_title = grabTitleFromURL(most_popular_url);
+				candidate_title = StringEscapeUtils
+						.unescapeHtml(candidate_title);
+
+				if ((candidate_title != null) && (!candidate_title.equals(""))) {
+					candidate_title = candidate_title.replaceAll("(^(T|t)witter\\s\\/\\s.{1,}?\\:)", ""); //MR added : cases related to twitter titles from URLs
+
+					candidate_title = extr.removeMultiplePunctuation(candidate_title); //added by MR
+					candidate_title = candidate_title
+							.replaceAll("\\s{2,}", " "); //added by MR
+					
+					String[] parts1 = candidate_title.split("\\|");
+					int max_length = parts1[0].length();
+					candidate_title = parts1[0]; // splits title via | and keeps
+													// the longest sentence from
+													// split
+					for (int p = 1; p < parts1.length; p++)
+						if (parts1[p].length() > max_length) {
+							max_length = parts1[p].length();
+							candidate_title = parts1[p];
+						}
+
+//					Logger.getRootLogger()
+//							.info("Title extractor  (case 1) : cleaning candidate title");
+					candidate_title = cleanTitleFromCommonMediaNames(candidate_title);
+//					Logger.getRootLogger().info(
+//							"Title extractor  (case 1) : getting site name"); // remove
+																				// media
+																				// name
+																				// from
+																				// title
+					String mediaName = getSiteNameFromURL(most_popular_url)
+							.toLowerCase();
+					String[] titleParts = candidate_title
+							.split(titleSeparators); // sometimes "-" exists as 
+														// non-separator.. MR
+					candidate_title = "";
+					AbstractStringMetric metric = new Levenshtein();
+
+					for (int i = 0; i < titleParts.length; i++) {
+						String next_part = titleParts[i].trim();
+						// float mediaNameSimilarity = 0.0f; // MR change it to
+						// something BIG in order not to take it into account
+						float mediaNameSimilarity = metric.getSimilarity(
+								mediaName, next_part.replace(" ", "")
+										.toLowerCase());
+						if (mediaNameSimilarity < thresholdMediaName) {
+							candidate_title = candidate_title + next_part + " ";
+						}
+					}
+
+					candidate_title = candidate_title.trim();
+					candidate_title = removeNameDots(candidate_title);
+					
+					fall_back_case1 = candidate_title;
+					candidate_title = TrendsLabeler
+							.getCleanedTitleMR(candidate_title);
+							
+					if ((candidate_title != null) // if title is short 
+							&& (!candidate_title.equals(""))
+							&& (!candidate_title.toLowerCase().equals("home"))
+							&& (candidate_title.length() > 7)) // if title is
+																// too short //added by MR
+					{
+						if (!candidate_title.matches(".*[\\W]$")) //if there is no symbol at the end, adds "."
+							candidate_title = candidate_title + ".";
+						
+						// System.out.print("Case 1 selected | ");
+						firstChar = candidate_title.charAt(0);
+						return Character.toUpperCase(firstChar) + candidate_title.substring(1);
+						
+					}
+						
+				}//end of if candidate_title != null
+			}//end of if most_popular_url =! null
+		}//end of if url.count has values
+
+		// case 2 : if tweet comes from Breaking_accounts
+		// Logger.getRootLogger()
+		// .info("Title extractor : Examining case 2 (message posted by listed user)");
+		Set<String> entities = new HashSet<String>();
+		List<Entity> ents = dysco.getEntities();
+		for (Entity ent : ents)
+			entities.add(ent.getName());
+		for (Item item_tmp : items) {
+			if (BREAKING_ACCOUNTS.contains(item_tmp.getAuthorScreenName())) {
+				String candidate_title = item_tmp.getTitle();
+				List<String> parts = getSentences1(candidate_title, entities);
+				candidate_title = "";
+				for (String part : parts)
+					candidate_title = candidate_title + " " + part;
+				candidate_title = candidate_title.trim();
+				candidate_title = StringEscapeUtils
+						.unescapeHtml(candidate_title);
+				if (candidate_title.endsWith(":"))
+					candidate_title = candidate_title.substring(0,
+							candidate_title.length() - 2) + ".";
+				
+				if (!candidate_title.matches(".*[\\W]$")) //if there is no symbol at the end, adds "."
+					candidate_title = candidate_title + ".";
+
+				if ((candidate_title != null) && (!candidate_title.equals(""))){
+					// System.out.print("Case 2 selected | ");
+					firstChar = candidate_title.charAt(0);
+					return Character.toUpperCase(firstChar) + candidate_title.substring(1);
+				}
+
+			}
+		}
+
+		// Case 3, default certh procedure: finding most popular sentence in all
+		// tweets
+		// Logger.getRootLogger().info(
+		// "Title extractor : Examining case 3 (most popular sentence)");
+		String candidate_title = findPopularTitleCERTH(dysco);
+		//here we have to apply cleaning in case of title derived from item[0]
+		candidate_title = TrendsLabeler.getCleanedTitleMR(candidate_title);
+		candidate_title = candidate_title.replaceAll(Extractor.urlRegExp, "");
+//		candidate_title = candidate_title.replaceAll("^[^\\w(\\[]+", "").replaceAll("[^\\w\\)\\]\\?]+$", "").replaceAll("\\s{2,}","");
+		
+
+		if ((candidate_title.length()<7) || candidate_title == null)
+			candidate_title = fall_back_case1; //case 1 without cleaning - title from URL as it is
+		
+		if (candidate_title == null || candidate_title == ""){ //means that fall_back_case = null
+			Random randomGenerator = new Random();
+			candidate_title = dysco.getItems()
+					.get(randomGenerator.nextInt(dysco.getItems().size()))
+					.getTitle();
+			// candidate_title = dysco.getItems().get(0).getTitle(); // text from first Item without cleaning.
+			
+			// some cleaning is required here...
+		}
+		
+		
+		candidate_title = StringEscapeUtils.unescapeHtml(candidate_title);
+		
+		if (candidate_title.endsWith(":"))
+			candidate_title = candidate_title.substring(0,
+					candidate_title.length() - 1)
+					+ ".";
+		
+		if (!candidate_title.matches(".*[\\W]$")) //if there is no symbol at the end, adds "."
+			candidate_title = candidate_title + ".";
+		
+		
+		// System.out.print("Case 3 selected | ");
+		firstChar = candidate_title.charAt(0);
+		return Character.toUpperCase(firstChar) + candidate_title.substring(1);
+
+
+
+	}	
+	
+    public static String findPopularTitleCERTH_old(Dysco dysco){
         List<Item> items=dysco.getItems();
         List<String> textItems=new ArrayList<String>();
         Set<String> entities=new HashSet<String>();
@@ -409,7 +688,7 @@ public class TrendsLabeler {
             entities.add(ent.getName());
 //        Logger.getRootLogger().info("Title extractor (case 3): Getting candidate sentences");
         for(Item item_tmp:items){
-            List<String> sentences=getSentences1(item_tmp.getTitle(),entities);
+            List<String> sentences=getSentences1_old(item_tmp.getTitle(),entities);
             textItems.addAll(sentences);
         }
             
@@ -421,11 +700,79 @@ public class TrendsLabeler {
             title=textItems.get(0);
         if(((title==null)||(title.trim().length()==0))&&(items.size()>0))
             title=items.get(0).getTitle();
-        return title;
+        return title.replaceAll("\\s{2,}", " ");
         
     }
 
 
+	public static String findPopularTitleCERTH(Dysco dysco) {
+		List<Item> items = dysco.getItems();
+		
+		// get titles from items and add them in a List<String>
+		List<String> dyscoText = new ArrayList<String>(items.size());
+		for (Item item : items) {
+			dyscoText.add(item.getTitle());
+		}
+//		System.out.println("Total number of Items in Dysco : "
+//				+ dyscoText.size());
+//		HashMap<String, Integer> uniqueTitlesMap = DuplicateTextSearcher.findDuplicateItems(dyscoText);
+		HashMap<String, Integer> uniqueTitlesMap = new HashMap<String, Integer>();
+		for (String text : dyscoText) {
+			Integer count = uniqueTitlesMap.get(text);
+			if (count == null)
+				uniqueTitlesMap.put(text, 1);
+			else
+				uniqueTitlesMap.put(text, count + 1);
+		}
+		
+		List<String> textItems = new ArrayList<String>(); // keeps all sentences
+															// per item | no
+															// separation per
+															// item
+		Set<String> entities = new HashSet<String>();
+		List<Entity> ents = dysco.getEntities();
+		for (Entity ent : ents)
+			entities.add(ent.getName());
+		// Logger.getRootLogger().info(
+		// "Title extractor (case 3): Getting candidate sentences");
+		
+		//utilize unique items
+		for (Map.Entry<String, Integer> entry : uniqueTitlesMap.entrySet()) {
+			String text = entry.getKey();
+			Integer frequency = entry.getValue();
+			List<String> sentences = getSentences1(text, entities);
+			for (int i = 0; i < frequency; i++) {
+				textItems.addAll(sentences);
+			}
+		}
+		
+		// Logger.getRootLogger().info(
+		// "Title extractor (case 3): Finding most popular sentence");
+		String title = findPopularTitleNew(textItems);
+
+		if (((title == null) || (title.trim().length() == 0))
+				&& (textItems.size() > 0))
+			title = extr.cleanText(textItems.get(0));
+		if (((title == null) || (title.trim().length() == 0))
+				&& (textItems.size() > 0))
+			title = textItems.get(0);
+		if (((title == null) || (title.trim().length() == 0))
+				&& (items.size() > 0))
+			title = items.get(0).getTitle();
+		
+		// return title.replaceAll("\\s{2,}"," ");
+		if ((StringUtils.countMatches(title, "\"") == 1)) // if only one (") is
+															// included in the
+															// title then it
+															// should be removed
+			title = title.replaceAll("\"", "");
+		return title.replaceAll("^[^\\w(\\[]+", "")
+				.replaceAll("[^\\w\\.\\!\\?\\)\\]]+$", "")
+				.replaceAll("\\s{2,}", " ");
+
+	}
+
+	
     private static String findPopularTitleNew(List<String> textItems) {
         List<String> titles = textItems;
         
@@ -446,14 +793,17 @@ public class TrendsLabeler {
             for(String tmp_str:tokens)
                 str_concat=str_concat+tmp_str+" ";
             str_concat=str_concat.trim();
+			// keeps filtered titles as final in corresponding variable
             filteredTitlesFinal.add(str_concat);
+			// stores combinations (n-grams) from each title and counts
+			// frequencies
             addCombinationsCounts(str_concat,combinationsCounts);
         }
 
         if(combinationsCounts.size() == 0){
             return null;
         }
-
+		// adds frequencies to every same occurrence of title or subtitle
         Map<String, RankedTitle> titlesFrequencies = new HashMap<String, RankedTitle>();
         for(Entry<String,Integer> combination : combinationsCounts.entrySet()){
 //        for(String combination : combinations){
@@ -480,20 +830,24 @@ public class TrendsLabeler {
             for(String tmp_str:textItems){
                 if((tmp_str.contains(best_phrase.trim()))){
                     Integer cc=counts.get(tmp_str);
+					// puts whole sentence that includes best_phrase
                     if(cc==null)
                         counts.put(tmp_str,1);
                     else
                         counts.put(tmp_str,cc+1);
                 }
             }
+			// counts is a map that keeps filtered titles and freq. of
+			// occurrences in whole items
             String best_sentence="";
             int best_count=-1;
+			// gets the most occurred sentence that includes best phrase
             for(Entry<String,Integer> tmp_entry:counts.entrySet())
                 if(tmp_entry.getValue()>best_count){
                     best_count=tmp_entry.getValue();
                     best_sentence=tmp_entry.getKey();
                 }
-            best_sentence=extractor.cleanText(best_sentence);
+            best_sentence=extr.cleanText(best_sentence);
             return best_sentence;
         }
         else {
@@ -538,7 +892,7 @@ public class TrendsLabeler {
                 }
             }
             //more than 4 letters
-            if(numberOfLetters <= 4){
+            if(numberOfLetters <= 13){
                 continue;
             }
             if(hasHighDigitToletterRatio(title, 0.5)){
@@ -557,7 +911,7 @@ public class TrendsLabeler {
             title.setFrequency(title.getFrequency() * titleLength);
         }
 
-        rerankTitlesByNumberOfPhotos(listOfRankedTitles, numberOfPhotos);
+        //rerankTitlesByNumberOfPhotos(listOfRankedTitles, numberOfPhotos);
 
         rerankRedundantSingleTokenTitles(listOfRankedTitles);
         rerankMaximumTokenLengthWithinATitle(listOfRankedTitles);
@@ -689,7 +1043,7 @@ public class TrendsLabeler {
             String[] parts = sentence.split("\\s");
             String nextSentence="";
             int length = 2;
-            while( length <= MAX_TOKEN_LENGTH && length <= parts.length ){
+            while (length <= MAX_TOKEN_LENGTH && length <= parts.length ){
                 for(int i = 0; i < (parts.length - length) + 1 ; i++){
                     nextSentence=getOneCombination(parts, i, length);
                     Integer count=combinationsCounts.get(nextSentence);
@@ -901,12 +1255,86 @@ public class TrendsLabeler {
         return result;
     }
     
-    
-    public static List<String> getSentences1(String text, Set<String> entities){
+    public static String getCleanedTitleMR(String text) {
+		if (text != null) {
+			// System.out.println("Text before     --> " + text);
+			text = text.trim(); // removes redundant white spaces
+			text = StringEscapeUtils.escapeHtml(text); // makes it as html
+			text = text.replaceAll("(http|https):*(//)*\\S+&hellip;\\z", "");
+			// text = text.replaceAll("http\\:*.*&hellip;\\z", "");
+//			text = text.replaceAll("\\S+&hellip;\\z", ""); // removes 3 dots at the
+														// end
+														// of string
+//			text = text.replaceAll("(\\S[^\\p{Punct}\\s])+&hellip;\\z", "");
+			text = text.replaceAll("(((\\s|\\p{Punct})+)\\S+)&hellip;\\z", "");
+			text = text.replaceAll("&mdash;", "-");
+			text = StringEscapeUtils.unescapeHtml(text); // gets true text again
+
+			text = text.replaceAll("\\s*\\&amp\\;\\s*", " & ")
+					.replaceAll("\\&gt\\;", " > ")
+					.replaceAll("\\&lt\\;", " < ");
+
+			text = text.replaceAll("\\’", "'"); // so as not to remove this
+												// apostrophe after the next
+												// replacement
+			text = text.replaceAll("\\‘", "'");
+			text = extr.keepUsernamesWithApostrophe(text); // if @username is
+															// followed by 's
+															// then
+															// keep username and
+															// remove @
+			text = extr.keepUsernamesAndHashtagsWithPrepositions(text); //"by @" remains, "via @" remains 
+			text = text.replaceAll("\\“", "\"");
+			text = text.replaceAll("\\”", "\"");
+			text = text.replaceAll("[^\\x00-\\x7F]+", " "); // remove
+															// non-US-ASCII
+															// characters
+
+			text = extr.extractReplyScreennameByMR(text);
+			text = extr.removeHashtags(text);
+			text = extr.removeMultiplePunctuation(text);
+			// System.out.println("Removing usernames and cashtags..");
+			text = extr.removeScreennames(text); // removes @usernames
+			List<String> cashtags = extr.extractCashtags(text);
+			if (!cashtags.isEmpty()) {
+				for (String cashtag : cashtags) {
+					text = text.replaceAll("\\$" + cashtag, " ");
+				}
+				text = text.replaceAll("\\s{2,}", " ");
+			}
+			//remove "via http://"
+			text = text.replaceAll("via\\s{0,1}http:*(//)*\\S+", "");
+			
+			// System.out.println("Removing symbols at the beginning of the sentence..");
+			text = text.replaceAll("^[^\\w(\\[]+", "");
+			// System.out.println("Removing symbols at the end of the sentence..");
+			text = text.replaceAll("[^\\w\\?\\'\\\"\\)\\]]+$", "");
+
+			// text = text.replaceAll("(\\p{Punct}\\s\\p{Punct})", " "); //to
+			// keep if text is Π‘ΠΎΡ�ΠΊΡƒ Π±Ρ‹ ΠµΠΌΡƒ
+			
+			//remove single parenthesis
+			if (text.contains("(")&&(!text.contains(")")))
+				text = text.replace("(", "");
+			if (text.contains(")") && (!text.contains("(")))
+				text = text.replace(")", "");
+			//replace empty ()
+			text = text.replaceAll("\\(\\s*\\)", "");
+
+			// text = text.replaceAll("([^\\w\\/\\,\\;\\.\\&\\%\\+\\:\\$]\\s)+"," ");
+			// text = text.replaceAll("([^\\w\\/](\\s))\\1{2,}", " ");
+
+			// System.out.println(text);
+			text = text.replaceAll("\\s{2,}", " ").replaceAll("-\\s*\\z", "");
+		}
+		return text;
+	}
+	
+    public static List<String> getSentences1_old(String text, Set<String> entities){
         text=text.trim();
         text=StringEscapeUtils.escapeHtml(text);
         text=text.replaceAll("http:.*&hellip;\\z","");
-        String[] toMatch={"\\ART\\s+@\\S+","\\AMT\\s+@\\S+"};
+        String[] toMatch={"\\ART\\s+@\\S+", "\\AMT\\s+@\\S+"};
         for(String t:toMatch){
                 Pattern pattern = Pattern.compile(t, Pattern.CASE_INSENSITIVE);
                 String newTweet = text.trim();
@@ -927,7 +1355,8 @@ public class TrendsLabeler {
         
 //        for(int i=0;i<parts.length;i++){
         int limit=10;
-        if(limit>parts.length) limit=parts.length;
+        if(limit>parts.length) 
+			limit=parts.length;
         for(int i=0;i<limit;i++){
 //            parts[i]=text.replace("http://*&hellip;","");
             String text_cleaned=extractor.cleanText(parts[i]);
@@ -969,6 +1398,65 @@ public class TrendsLabeler {
         return sentences;
     }
     
+	public static List<String> getSentences1(String text, Set<String> entities) {
+//		System.out.println("   Text as it is    :   " + text);
+		text = TrendsLabeler.getCleanedTitleMR(text);
+//		System.out.println("   Text cleaned     :   " + text + "\n" + "............................................................................");
+
+		String[] parts = text.split(Extractor.urlRegExp);
+		List<String> sentences = new ArrayList<String>();
+
+		// for(int i=0;i<parts.length;i++){
+		int limit = 10;
+		if (limit > parts.length)
+			limit = parts.length;
+		for (int i = 0; i < limit; i++) {
+			String text_cleaned = extr.cleanText(parts[i]);
+			// List<String> sentences_tmp=new ArrayList<String>();
+			Reader reader = new StringReader(text_cleaned);
+			DocumentPreprocessor dp = new DocumentPreprocessor(reader);
+			dp.setTokenizerFactory(PTBTokenizerFactory
+					.newWordTokenizerFactory("ptb3Escaping=false, untokenizable=noneDelete"));
+			// dp.setTokenizerFactory(PTBTokenizerFactory.newWordTokenizerFactory("untokenizable=noneDelete"));
+
+			Iterator<List<HasWord>> it = dp.iterator();
+			while (it.hasNext()) {
+				StringBuilder sentenceSb = new StringBuilder();
+				List<HasWord> sentence = it.next();
+				boolean last_keep = false;
+				for (HasWord token : sentence) {
+					if ((!token.word().matches("[,:!.;?)]"))
+							&& (!token.word().contains("'")) && !last_keep) {
+						sentenceSb.append(" ");
+					}
+					last_keep = false;
+					if (token.word().matches("[(\\[]"))
+						last_keep = true;
+					String next_word = token.toString();
+
+					if ((next_word.toUpperCase().equals(next_word))
+							&& (!next_word.equals("I"))
+							&& (!entities.contains(next_word)))
+						next_word = next_word.toLowerCase();
+					if (next_word.equals("i"))
+						next_word = "I";
+					sentenceSb.append(next_word);
+				}
+				String new_sentence = sentenceSb.toString().trim();
+				Character fc = new_sentence.charAt(0);
+				new_sentence = fc.toString().toUpperCase()
+						+ new_sentence.substring(1);
+				if (new_sentence.endsWith(":"))
+					text = text.substring(0, text.length() - 3) + "."; 
+
+				sentences.add(new_sentence);
+			}
+			// sentences.addAll(sentences_tmp);
+		}
+		return sentences;
+	}
+
+	
     public static List<String> getSentences2(String text){
         String[] parts=text.split(Extractor.urlRegExp);
         List<String> sentences=new ArrayList<String>();
@@ -1016,7 +1504,8 @@ public class TrendsLabeler {
             String host=url.getHost();
             String[] parts=host.split("\\.");
             for(int i=0;i<parts.length;i++)
-                if((!parts[i].equals("www"))&&(!parts[i].equals("en"))) return parts[i];
+                if((!parts[i].equals("www"))&&(!parts[i].equals("en"))) 
+					return parts[i];
         } catch (MalformedURLException ex) {
             ex.printStackTrace();
         }
@@ -1025,16 +1514,184 @@ public class TrendsLabeler {
     }
     
     private static String cleanTitleFromCommonMediaNames(String title){
-        title=title.trim();
-        return title.replace("- ITV News","").replace("- Bloomberg","").replace("- CNN.com","").replace("| News | Pitchfork","").replace("- The Next Web","").replace("- CBS News Video","").replace("- NYTimes.com","").replace(" - YouTube","").replace("- WSJ.com","").replace(": Pressparty","").replace(" :: Beatport Play","").replace(" [VIDEO]","").replace(": The New Yorker","").replace("(Video)","").replace("Business News & Financial News - The Wall Street Journal - Wsj.com","").replace("| TIME.com","").replace("NME Magazine","");
-    }
+        title = title.trim();
+		return title
+				.replace("- ITV News", "")
+				.replace("- Yahoo News", "")
+				.replace("- Bloomberg", "")
+				.replace("| Facebook", "")
+				.replace("- CNN.com", "")
+				.replace(": People.com", "")
+				.replace("- People.com", "")
+				.replace("| News | Pitchfork", "")
+				.replace("- The Next Web", "")
+				.replace("- CBS News Video", "")
+				.replace(" CBS News", "")
+				.replace("- NYTimes.com", "")
+				.replace(" - YouTube", "")
+				.replace("- WSJ.com", "")
+				.replace(": Pressparty", "")
+				.replace(" :: Beatport Play", "")
+				.replace(" [VIDEO]", "")
+				.replace(": The New Yorker", "")
+				.replace("(Video)", "")
+				.replace(
+						"Business News & Financial News - The Wall Street Journal - Wsj.com",
+						"").replace("| TIME.com", "")
+				.replace("NME Magazine", "");
+	}
+	
+	private static String removeNameDots(String title) {
+		title = title.trim();
+		if (title != null && !title.equals("")) {
+			// Pattern nameDotPattern = Pattern.compile("[a-zA-z]+" +
+			// Regex.URL_VALID_GTLD);
+			Matcher nameDotMatcher = Regex.NAME_DOT_GTLD_PATTERN.matcher(title);
+			title = nameDotMatcher.replaceAll("");
+			nameDotMatcher = Regex.NAME_DOT_CCTLD_PATTERN.matcher(title);
+			title = nameDotMatcher.replaceAll("");
+		}
+		return title.trim();
+	}
     
     static String[] dyscoIds=new String[]{
 "c28c26dd-f373-4975-8fcb-d7600c6a1979",
 "dd6ba020-408f-415b-b803-879971aa90ef",
 "1747f8e6-dc8d-45b9-8d29-05eac42864fa",
-"0cc3a5f1-4963-4e21-a47c-bad176be0f16"};    
+"0cc3a5f1-4963-4e21-a47c-bad176be0f16"};   
+
+	private static HashMap<String, Integer> getUniqueTerms(Dysco dysco) {
+		
+
+		// get corresponding values from dysco
+		Map<String, Double> keywords = dysco.getKeywords();
+		List<Entity> entities = dysco.getEntities();
+		Map<String, Double> hashtags = dysco.getHashtags();
+
+		List<String> allNgrams = new ArrayList<String>(keywords.size()
+				+ entities.size() + hashtags.size());
+		// add n-grams to allNgrams
+		for (Map.Entry<String, Double> entry : keywords.entrySet())
+			allNgrams.add(entry.getKey());
+		for (Entity entity : entities)
+			allNgrams.add(entity.getName());
+		for (Map.Entry<String, Double> entry : hashtags.entrySet())
+			allNgrams.add(entry.getKey());
+
+		HashMap<String, Integer> uniqueTopicTerms = new HashMap<String, Integer>();
+		Integer count;
+
+		for (String unigrams : allNgrams) {
+			String[] unigram = unigrams.split(" ");
+			for (String term : unigram) {
+				// remove symbols, make lowercase, remove non-Unicode
+				term = term.replaceAll("\\p{Punct}+", " ")
+						.replaceAll("\\s{2,}", " ").trim();
+				term = term.replaceAll("[^\\x00-\\x7F]", "");
+				if ((term != null) && (!term.equals("")) && (term.length() > 3)) {
+					count = uniqueTopicTerms.get(term.toLowerCase());
+					if (count == null)
+						uniqueTopicTerms.put(term.toLowerCase(), 1);
+					else
+						uniqueTopicTerms.put(term.toLowerCase(), count + 1);
+				}
+			}
+		}
+		return uniqueTopicTerms;
+	}
+
+	public static List<RankedTitleRGU>getTweetScores(Dysco dysco) {
+		
+		List<Item> items = dysco.getItems();
+		List<String> allText = new ArrayList<String>(items.size());
+		for (Item item : items) {
+			allText.add(item.getTitle());
+		}
+		HashMap<String, Integer> uniqueTexts = new HashMap<String, Integer>();
+		for (String text : allText) {
+			Integer count = uniqueTexts.get(text);
+			if (count == null)
+				uniqueTexts.put(text, 1);
+			else
+				uniqueTexts.put(text, count + 1);
+		}
+		
+		HashMap<String, Integer> uniqueTerms = getUniqueTerms(dysco); //combine keywords, entities, hashtags
+
+		// other parameters
+		int numberOfTopicTerms = uniqueTerms.size();
+		double a = 0.8;
+		int numberOfTweets = dysco.getItems().size();
+
+		//variable to fill in 
+		List<RankedTitleRGU> tweetScores = new ArrayList<RankedTitleRGU>(numberOfTweets);
+		
+		for (String title : allText){
+			RankedTitleRGU rankedTitle = new RankedTitleRGU(title);
+			int numberOfDuplicatesLikeCurrentTweet = uniqueTexts.get(title);
+			int numberOfTermsContainedInTweet = calculateNumberOfTermsContainedInTweet(uniqueTerms, title);
+			rankedTitle.calculateScore(a, numberOfTermsContainedInTweet, numberOfTopicTerms, numberOfDuplicatesLikeCurrentTweet, numberOfTweets);
+			tweetScores.add(rankedTitle);
+		}
+
+		return tweetScores;
+
+	}
+
+	private static int calculateNumberOfTermsContainedInTweet(
+			HashMap<String, Integer> uniqueTerms, String title) {
+		int countOccurence= 0;		
+		
+		for (Map.Entry<String, Integer> entry : uniqueTerms.entrySet()){
+			String term = entry.getKey();
+			//for each term
+			Pattern p = Pattern.compile(term);
+			Matcher m = p.matcher(title.toLowerCase());
+			while (m.find()){
+				countOccurence +=1;
+		    }
+		}		
+		return countOccurence;
+	}
+
+	public static String findPopularTitleRGU(Dysco dysco) {
+		
+		List<RankedTitleRGU> tweetScoresRGU = TrendsLabeler.getTweetScores(dysco);
+		Collections.sort(tweetScoresRGU, Collections.reverseOrder());
+		RankedTitleRGU bestRankedTitle = tweetScoresRGU.get(0);
+		String currentTitleRGU = bestRankedTitle.getTitle();
+		
+		//apply some cleaning
+//		String currentTitleRGUa = Extractor.cleanTextRGU(currentTitleRGU);
+//		System.out.println("This is RGU cleaned     : " + currentTitleRGUa);
+//		System.out.println("This is dominant tweet  : " + currentTitleRGU);
+		
+		String currentTitleRGUb = TrendsLabeler.getCleanedTitleMR(currentTitleRGU);
+		
+		if ((currentTitleRGUb !=null) || (currentTitleRGUb !=""))
+			currentTitleRGUb = currentTitleRGUb.replaceAll(Extractor.urlRegExp, "");
+		
+		if (currentTitleRGUb.endsWith(":")||currentTitleRGUb.endsWith("-"))
+			currentTitleRGUb = currentTitleRGUb.trim().substring(0,
+					currentTitleRGUb.trim().length() - 1) + ".";
+		currentTitleRGUb = currentTitleRGUb.replaceAll("[^\\w\\'\\\"\\?\\)\\]]+$", "");
+		
+		if (!currentTitleRGUb.matches(".*[\\W]$")) // if there is no symbol at
+			// the end, adds "."
+			currentTitleRGUb = currentTitleRGUb.trim() + ".";
+		currentTitleRGUb = currentTitleRGUb.trim();
+		
+		if ((StringUtils.countMatches(currentTitleRGUb, "\"") == 1))
+			currentTitleRGUb = currentTitleRGUb.replaceAll("\"", "");
+		Character firstChar = currentTitleRGUb.charAt(0);
+		currentTitleRGUb = Character.toUpperCase(firstChar) + currentTitleRGUb.substring(1);
+		
+		if (currentTitleRGUb.length()<3)
+			currentTitleRGUb = currentTitleRGU; //without any cleaning
+		
+//		System.out.println("This is RGU cleaned MR  : " + currentTitleRGUb + "\n");		
+		return currentTitleRGUb;
+	} 
     
     
 }
-

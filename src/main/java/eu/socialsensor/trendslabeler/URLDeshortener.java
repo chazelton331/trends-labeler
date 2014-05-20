@@ -39,7 +39,7 @@ public class URLDeshortener {
     }
 
     // API
-    public static String expand(final String urlArg) throws IOException {
+    public static String expand (final String urlArg) throws IOException {
         String originalUrl = urlArg;
         String newUrl = expandSingleLevel(originalUrl);
         while (!originalUrl.equals(newUrl)) {
@@ -59,10 +59,12 @@ public class URLDeshortener {
             connection.setInstanceFollowRedirects(false);
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(10000);
-//            Logger.getRootLogger().info("Title extractor  (case 1) : connecting ("+url_str+")");
+            Logger.getRootLogger().info("Title extractor  (case 1) : connecting ("+url_str+")");
             connection.connect();
             expandedURL = connection.getHeaderField("Location");
-  //          Logger.getRootLogger().info("Title extractor  (case 1) : closing connection");
+			if (expandedURL == null)
+            	expandedURL = url_str; //added by MR: to keep URL, if it is already expanded
+            Logger.getRootLogger().info("Title extractor  (case 1) : closing connection");
 //            connection.getInputStream().close(); 
         }
         catch(Exception ex){

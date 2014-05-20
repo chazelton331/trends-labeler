@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package eu.socialsensor.trendslabeler;
 
 import java.util.regex.*;
@@ -54,7 +50,7 @@ public class Regex {
   private static final String HASHTAG_ALPHA_NUMERIC = "[" + HASHTAG_ALPHA_NUMERIC_CHARS +"]";
 
   /* URL related hash regex collection */
-  private static final String URL_VALID_PRECEEDING_CHARS = "(?:[^A-Z0-9@＠$#＃\u202A-\u202E]|^)";
+  private static final String URL_VALID_PRECEEDING_CHARS = "(?:[^A-Z0-9@@$##\u202A-\u202E]|^)";
 
   private static final String URL_VALID_CHARS = "[\\p{Alnum}" + LATIN_ACCENTS_CHARS + "]";
   private static final String URL_VALID_SUBDOMAIN = "(?:(?:" + URL_VALID_CHARS + "[" + URL_VALID_CHARS + "\\-_]*)?" + URL_VALID_CHARS + "\\.)";
@@ -146,7 +142,7 @@ public class Regex {
   public static final int VALID_HASHTAG_GROUP_BEFORE = 1;
   public static final int VALID_HASHTAG_GROUP_HASH = 2;
   public static final int VALID_HASHTAG_GROUP_TAG = 3;
-  public static final Pattern INVALID_HASHTAG_MATCH_END = Pattern.compile("^(?:[#＃]|://)");
+  public static final Pattern INVALID_HASHTAG_MATCH_END = Pattern.compile("^(?:[##]|://)");
   public static final Pattern RTL_CHARACTERS = Pattern.compile("[\u0600-\u06FF\u0750-\u077F\u0590-\u05FF\uFE70-\uFEFF]");
 
   public static final Pattern AT_SIGNS = Pattern.compile("[" + AT_SIGNS_CHARS + "]");
@@ -158,7 +154,14 @@ public class Regex {
 
   public static final Pattern VALID_REPLY = Pattern.compile("^(?:" + UNICODE_SPACES + ")*" + AT_SIGNS + "([a-z0-9_]{1,20})", Pattern.CASE_INSENSITIVE);
   public static final int VALID_REPLY_GROUP_USERNAME = 1;
+  
+  public static final Pattern VALID_RETWEET_MODIFIED_TWEET_BY_MR = Pattern.compile("(RT|MT|via|by|according to|from)((?:\\b\\W*@\\w+)+)\\:*", Pattern.CASE_INSENSITIVE);
+  public static final Pattern VALID_REPLY_BY_MR_complex = Pattern.compile("([\\s�'`\"])*((by)|(via)|(according to)|(from))?(?:^|\\s|[\\p{Punct}&&[^/]�])(@[\\p{L}0-9-_\\p{P}]+)(['`\"�])*", Pattern.CASE_INSENSITIVE);
 
+  public static final Pattern NAME_DOT_GTLD_PATTERN = Pattern.compile("[a-zA-z]+\\." + Regex.URL_VALID_GTLD);
+  public static final Pattern NAME_DOT_CCTLD_PATTERN = Pattern.compile("[a-zA-z]+\\." + Regex.URL_VALID_CCTLD);
+  
+  
   public static final Pattern INVALID_MENTION_MATCH_END = Pattern.compile("^(?:[" + AT_SIGNS_CHARS + LATIN_ACCENTS_CHARS + "]|://)");
 
   public static final Pattern VALID_URL = Pattern.compile(VALID_URL_PATTERN_STRING, Pattern.CASE_INSENSITIVE);
