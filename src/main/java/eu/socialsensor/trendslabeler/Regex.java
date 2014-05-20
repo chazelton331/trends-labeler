@@ -156,7 +156,8 @@ public class Regex {
   public static final int VALID_REPLY_GROUP_USERNAME = 1;
   
   public static final Pattern VALID_RETWEET_MODIFIED_TWEET_BY_MR = Pattern.compile("(RT|MT|via|by|according to|from)((?:\\b\\W*@\\w+)+)\\:*", Pattern.CASE_INSENSITIVE);
-  public static final Pattern VALID_REPLY_BY_MR_complex = Pattern.compile("([\\s�'`\"])*((by)|(via)|(according to)|(from))?(?:^|\\s|[\\p{Punct}&&[^/]�])(@[\\p{L}0-9-_\\p{P}]+)(['`\"�])*", Pattern.CASE_INSENSITIVE);
+//  public static final Pattern VALID_REPLY_BY_MR_complex = Pattern.compile("([\\s�'`\"])*((by)|(via)|(according to)|(from))?(?:^|\\s|[\\p{Punct}&&[^/]�])(@[\\p{L}0-9-_\\p{P}]+)(['`\"�])*", Pattern.CASE_INSENSITIVE);
+  public static final Pattern VALID_REPLY_BY_MR_complex = Pattern.compile("([\\s“'`\"])*((by)|(via)|(according to)|(from))?(?:^|\\s|[\\p{Punct}&&[^/]“])(@[\\p{L}0-9-_\\p{P}]+)(['`\"“])*", Pattern.CASE_INSENSITIVE);
 
   public static final Pattern NAME_DOT_GTLD_PATTERN = Pattern.compile("[a-zA-z]+\\." + Regex.URL_VALID_GTLD);
   public static final Pattern NAME_DOT_CCTLD_PATTERN = Pattern.compile("[a-zA-z]+\\." + Regex.URL_VALID_CCTLD);
