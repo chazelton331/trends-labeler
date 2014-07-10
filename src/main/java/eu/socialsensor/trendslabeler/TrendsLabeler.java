@@ -73,6 +73,8 @@ public class TrendsLabeler {
 	//		"138387125", "19656220", "19536881"
 	//	};
 
+	
+	
     static{
         System.setProperty ("sun.net.client.defaultReadTimeout", "7000");
         System.setProperty ("sun.net.client.defaultConnectTimeout", "7000");
@@ -1286,7 +1288,7 @@ public class TrendsLabeler {
 			text = extr.keepUsernamesAndHashtagsWithPrepositions(text); //"by @" remains, "via @" remains 
 			text = text.replaceAll("\\“", "\"");
 			text = text.replaceAll("\\”", "\"");
-			text = text.replaceAll("[^\\x00-\\x7F]+", " "); // remove
+			//text = text.replaceAll("[^\\x00-\\x7F]+", " "); // remove
 															// non-US-ASCII
 															// characters
 
@@ -1587,7 +1589,7 @@ public class TrendsLabeler {
 				// remove symbols, make lowercase, remove non-Unicode
 				term = term.replaceAll("\\p{Punct}+", " ")
 						.replaceAll("\\s{2,}", " ").trim();
-				term = term.replaceAll("[^\\x00-\\x7F]", "");
+//				term = term.replaceAll("[^\\x00-\\x7F]", "");
 				if ((term != null) && (!term.equals("")) && (term.length() > 3)) {
 					count = uniqueTopicTerms.get(term.toLowerCase());
 					if (count == null)
