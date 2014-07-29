@@ -1,29 +1,41 @@
 package eu.socialsensor.trendslabeler;
 
+import eu.socialsensor.framework.common.domain.Item;
+
 public class RankedTitleRGU implements Comparable<RankedTitleRGU> {
 	
-	private String title;       
+	private String title;
+        private Item item;
     private double score;
 
-    public RankedTitleRGU(String title, double score) {
+    public RankedTitleRGU(String title, Item item,double score) {
         this.title = title;
         this.score = score;
+        this.item = item;
     }
     
-    public RankedTitleRGU(String title){
+    public RankedTitleRGU(String title, Item item){
     	this.title = title;
     	this.score = -1.0;
+        this.item=item;
     }
     
+    /*
     public RankedTitleRGU(){
     	this.title = "";
     	this.score = -1.0;
     }
+    */
     
     public String getTitle() {
         return title;
     }
 
+    public Item getItem() {
+        return item;
+    }
+    
+    
     public double getScore() {
         return score;
     }
@@ -32,6 +44,10 @@ public class RankedTitleRGU implements Comparable<RankedTitleRGU> {
     }
     public void setScore(double score){
         this.score = score;
+    }
+
+    public void setItem(Item item){
+    	this.item = item;
     }
     
     public void calculateScore(double a,

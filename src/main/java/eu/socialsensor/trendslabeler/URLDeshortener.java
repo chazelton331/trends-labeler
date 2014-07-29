@@ -84,6 +84,8 @@ public class URLDeshortener {
     }   
     
     
+    
+    
     final static String expandSafe(final String urlArg) throws IOException {
         String originalUrl = urlArg;
         String newUrl = expandSingleLevelSafe(originalUrl).getRight();
@@ -175,4 +177,32 @@ public class URLDeshortener {
         }
     }
 
+    
+    public static String expandFromManos(String shortUrl) throws IOException {
+        int redirects = 0;
+        int max_redirects=5;
+        HttpURLConnection connection;
+        while(true && redirects < max_redirects) {
+            try {
+                URL url = new URL(shortUrl);
+                connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+                connection.setInstanceFollowRedirects(false);
+                connection.setReadTimeout(2000);
+                connection.connect();
+                String expandedURL = connection.getHeaderField("Location");
+                if(expandedURL == null) {
+                    return shortUrl;
+                }
+                else {
+                    shortUrl = expandedURL;
+                    redirects++;
+                }
+            }
+            catch(Exception e) {
+                return null;
+            }
+        }
+        return shortUrl;
+    }     
+    
 }

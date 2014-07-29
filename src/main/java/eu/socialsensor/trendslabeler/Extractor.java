@@ -2,15 +2,31 @@ package eu.socialsensor.trendslabeler;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.*;
 
-import tumbler.internal.TumblerStringUtils;
+import org.languagetool.JLanguageTool;
+import org.languagetool.language.BritishEnglish;
+import org.languagetool.rules.RuleMatch;
 
 /**
  * A class to extract usernames, lists, hashtags and URLs from Tweet text.
  */
 public class Extractor {
 
+    private static JLanguageTool langTool;
+    private static Pattern ptrnPunc = Pattern.compile("\\p{Punct}");
+    static{        
+        try {
+            langTool = new JLanguageTool(new BritishEnglish());
+        } catch (IOException ex) {
+            Logger.getLogger(Extractor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        //langTool.activateDefaultPatternRules();
+    }
+    
+    
     public static class Entity {
 
         public enum Type {
@@ -651,7 +667,7 @@ public class Extractor {
         return text;
     }
 	
-	    public String removeHashtags(String text) {
+    public String removeHashtags(String text) {
     	
     	if (text!=null)
     		text = text.replaceAll(hashtagRegExpMR, "");
@@ -662,6 +678,69 @@ public class Extractor {
 		return text;
 	}
 
+    public String processHashtags(String text) {
+    	String text_tmp=text;
+    	if (text!=null){
+            //text = text.replaceAll(hashtagRegExpMR, "");
+            List<String> hashtags = extractHashtags(text);
+            for (String hashtag : hashtags) {
+                int posFirstStop=text.indexOf(".");
+                if(posFirstStop==-1) posFirstStop=text.length();
+                int posFirstComma=text.indexOf(",");
+                if(posFirstComma==-1) posFirstComma=text.length();
+                int posFirst=posFirstStop;
+                if(posFirstComma<posFirst) posFirst=posFirstComma;
+                int posHash=text.indexOf(hashtag);
+                
+                if(posHash>posFirst)
+                    text = text.replace("#" + hashtag, "");
+/*
+                else{
+                    String bestRep=getBestHashtagReplacement(hashtag);
+                    System.out.println("Pre rep: "+text);
+                    int possp=bestRep.indexOf(" ");
+                    System.out.println("Pos : "+possp);
+                    text = text.replaceAll("#" + hashtag, bestRep);
+                    System.out.println("After rep: "+text);
+                    System.out.println("Best match: "+bestRep);
+                }
+                */
+            }
+            
+            
+            
+            
+            String[] parts=text.split("\\p{Space}");
+            text_tmp="";
+            boolean inHashTagRegion=true;
+            for(int i=parts.length-1;i>=0;i--){
+                String next=parts[i];
+                if((next.startsWith("#")) && inHashTagRegion ){
+                }
+                else {
+                    if(next.startsWith("#")){
+                        String best=getBestHashtagReplacement(next.substring(1));
+                        String[] pps=best.split(" ");
+                        for(int o=pps.length-1;o>=0;o--){
+                            text_tmp=pps[o]+" "+text_tmp;
+                        }
+                    }
+                    else{
+                        text_tmp=next+" "+text_tmp;
+                        if(inHashTagRegion)
+                            inHashTagRegion=false;
+                    }
+                }
+            }
+            
+            text=text_tmp.trim();
+            
+            return text;
+	}
+        return text_tmp;
+    }
+    
+    
     public String removeScreennames(String text) {
         List<String> screen_names = this.extractMentionedScreennames(text);
         for (String screen_name : screen_names) {
@@ -770,4 +849,41 @@ public class Extractor {
             return this.charIndex;
         }
     }
+        
+    private String getBestHashtagReplacement(String hashtag){
+        try {
+            if(hashtag.startsWith("#"))
+                hashtag=hashtag.substring(1);
+            Matcher mtchrPunc = ptrnPunc.matcher(hashtag);    
+            String punct="";
+            if(mtchrPunc.find()){
+                int pos_punct=mtchrPunc.start();
+                if(pos_punct>-1)
+                    punct=hashtag.substring(pos_punct);
+            }
+            hashtag=hashtag.replaceAll("\\p{Punct}","");
+            List<RuleMatch> matches = langTool.check(hashtag);
+            String bestMatch=hashtag;
+            int largestBit=1;
+            
+            
+            for (RuleMatch match : matches) {
+                List<String> replacements=match.getSuggestedReplacements();
+                for(String str:replacements){
+                    String[] parts=str.split(" ");
+                    String new_str=str.replaceAll(" ","");
+                    if((new_str.equals(hashtag))&&(parts.length>largestBit)){
+                        largestBit=parts.length;
+                        bestMatch=str;
+                    }
+                }
+            }
+            return bestMatch+punct;
+        } catch (IOException ex) {
+            Logger.getLogger(Extractor.class.getName()).log(Level.SEVERE, null, ex);
+            return hashtag;
+        }
+    }
+    
+    
 }

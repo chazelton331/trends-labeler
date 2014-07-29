@@ -4,6 +4,10 @@
  */
 package eu.socialsensor.trendslabeler;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -14,31 +18,25 @@ import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.util.CoreMap;
 import eu.socialsensor.documentpivot.preprocessing.StopWords;
-import eu.socialsensor.framework.client.dao.ItemDAO;
-import eu.socialsensor.framework.client.dao.DyscoDAO;
-import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
-import eu.socialsensor.framework.client.dao.impl.DyscoDAOImpl;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.WebPage;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.String;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
 
-import java.util.logging.Level;
-
-import org.apache.log4j.Logger;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,6 +98,35 @@ public class TrendsLabeler {
     public static final Set<String> BREAKING_ACCOUNTS = new HashSet<String>(Arrays.asList(BREAKING_ARRAY));    
     public static double url_threshold_similarity=0.2;
 
+    /*
+    public static void main(String[] args){
+//        String input="20th #commonwealthgames set to #start today (I am #veryhappy). #blaaa [underway this evening] #cfc #29028 #we ";
+//        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off http://a...";
+        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off...";
+        String currentTitleRGUb=getCleanedTitleMR(input);
+        System.out.println(currentTitleRGUb);
+    }
+*/
+    public static void main( String[] args )
+    {
+        System.out.println("Getting items");
+        //List<Item> items=itemDAO.getLatestItems(10000);
+        String filename="D:\\twitter_data\\facup\\influencers_per_topic_all\\5_4_2012_16_16.json";
+        List<Item> items=loadItemsFromFile(filename);
+        Dysco newDysco=new Dysco();
+        newDysco.setItems(items);
+        System.out.println("no of items :"+newDysco.getItems().size());
+        
+        newDysco.setTitle(findPopularTitleRGU(newDysco));
+        
+        System.out.println("Title: "+newDysco.getTitle());
+        System.out.println("Author: "+newDysco.getAuthor());
+        System.out.println("Media url: "+newDysco.getMainMediaUrl());
+        System.out.println("Story type: "+newDysco.getStoryType());
+        
+    }
+    
+    
     /*public static void main(String[] args){
         ItemDAO itemdao=null;
         try {
@@ -658,7 +685,6 @@ public class TrendsLabeler {
 					.getTitle();
 			// candidate_title = dysco.getItems().get(0).getTitle(); // text from first Item without cleaning.
 			
-			// some cleaning is required here...
 		}
 		
 		
@@ -1259,10 +1285,15 @@ public class TrendsLabeler {
     
     public static String getCleanedTitleMR(String text) {
 		if (text != null) {
+                        boolean endsHellip=false;
+                        if((text.endsWith("&hellip;"))||(text.endsWith("..."))) endsHellip=true;
 			// System.out.println("Text before     --> " + text);
 			text = text.trim(); // removes redundant white spaces
 			text = StringEscapeUtils.escapeHtml(text); // makes it as html
+
+                        String textT=text;
 			text = text.replaceAll("(http|https):*(//)*\\S+&hellip;\\z", "");
+                        if(!textT.equals(text)) endsHellip=false;
 			// text = text.replaceAll("http\\:*.*&hellip;\\z", "");
 //			text = text.replaceAll("\\S+&hellip;\\z", ""); // removes 3 dots at the
 														// end
@@ -1282,7 +1313,7 @@ public class TrendsLabeler {
 			text = text.replaceAll("\\‘", "'");
 			text = extr.keepUsernamesWithApostrophe(text); // if @username is
 															// followed by 's
-															// then
+                        											// then
 															// keep username and
 															// remove @
 			text = extr.keepUsernamesAndHashtagsWithPrepositions(text); //"by @" remains, "via @" remains 
@@ -1293,13 +1324,17 @@ public class TrendsLabeler {
 															// characters
 
 			text = extr.extractReplyScreennameByMR(text);
-			text = extr.removeHashtags(text);
+//			text = extr.removeHashtags(text);
+			text = extr.processHashtags(text);
+                        text = removeParentheses(text);
+                        
 			text = extr.removeMultiplePunctuation(text);
 			// System.out.println("Removing usernames and cashtags..");
 			text = extr.removeScreennames(text); // removes @usernames
 			List<String> cashtags = extr.extractCashtags(text);
 			if (!cashtags.isEmpty()) {
 				for (String cashtag : cashtags) {
+                                    System.out.println("Cashtag: "+cashtag);
 					text = text.replaceAll("\\$" + cashtag, " ");
 				}
 				text = text.replaceAll("\\s{2,}", " ");
@@ -1328,6 +1363,28 @@ public class TrendsLabeler {
 
 			// System.out.println(text);
 			text = text.replaceAll("\\s{2,}", " ").replaceAll("-\\s*\\z", "");
+                        
+                        String currentTitleRGUb=text;
+                        if ((currentTitleRGUb !=null) || (currentTitleRGUb !=""))
+                                currentTitleRGUb = currentTitleRGUb.replaceAll(Extractor.urlRegExp, "");
+
+                        if (currentTitleRGUb.endsWith(":")||currentTitleRGUb.endsWith("-"))
+                                currentTitleRGUb = currentTitleRGUb.trim().substring(0,
+                                                currentTitleRGUb.trim().length() - 1) + ".";
+                        currentTitleRGUb = currentTitleRGUb.replaceAll("[^\\w\\'\\\"\\?\\)\\]]+$", "");
+
+                        if (!currentTitleRGUb.matches(".*[\\W]$")) // if there is no symbol at
+                                // the end, adds "."
+                                currentTitleRGUb = currentTitleRGUb.trim() + ".";
+                        currentTitleRGUb = currentTitleRGUb.trim();
+
+                        if ((StringUtils.countMatches(currentTitleRGUb, "\"") == 1))
+                                currentTitleRGUb = currentTitleRGUb.replaceAll("\"", "");
+                        Character firstChar = currentTitleRGUb.charAt(0);
+                        currentTitleRGUb = Character.toUpperCase(firstChar) + currentTitleRGUb.substring(1);
+
+                        text=currentTitleRGUb=text;
+                        if(endsHellip) text=text+"...";
 		}
 		return text;
 	}
@@ -1403,7 +1460,6 @@ public class TrendsLabeler {
 	public static List<String> getSentences1(String text, Set<String> entities) {
 //		System.out.println("   Text as it is    :   " + text);
 		text = TrendsLabeler.getCleanedTitleMR(text);
-//		System.out.println("   Text cleaned     :   " + text + "\n" + "............................................................................");
 
 		String[] parts = text.split(Extractor.urlRegExp);
 		List<String> sentences = new ArrayList<String>();
@@ -1606,8 +1662,10 @@ public class TrendsLabeler {
 		
 		List<Item> items = dysco.getItems();
 		List<String> allText = new ArrayList<String>(items.size());
+                HashMap<String, Item> itemsMap=new HashMap<String,Item>();
 		for (Item item : items) {
 			allText.add(item.getTitle());
+                        itemsMap.put(item.getTitle(), item);
 		}
 		HashMap<String, Integer> uniqueTexts = new HashMap<String, Integer>();
 		for (String text : allText) {
@@ -1617,7 +1675,7 @@ public class TrendsLabeler {
 			else
 				uniqueTexts.put(text, count + 1);
 		}
-		
+
 		HashMap<String, Integer> uniqueTerms = getUniqueTerms(dysco); //combine keywords, entities, hashtags
 
 		// other parameters
@@ -1629,7 +1687,7 @@ public class TrendsLabeler {
 		List<RankedTitleRGU> tweetScores = new ArrayList<RankedTitleRGU>(numberOfTweets);
 		
 		for (String title : allText){
-			RankedTitleRGU rankedTitle = new RankedTitleRGU(title);
+			RankedTitleRGU rankedTitle = new RankedTitleRGU(title,itemsMap.get(title));
 			int numberOfDuplicatesLikeCurrentTweet = uniqueTexts.get(title);
 			int numberOfTermsContainedInTweet = calculateNumberOfTermsContainedInTweet(uniqueTerms, title);
 			rankedTitle.calculateScore(a, numberOfTermsContainedInTweet, numberOfTopicTerms, numberOfDuplicatesLikeCurrentTweet, numberOfTweets);
@@ -1661,8 +1719,75 @@ public class TrendsLabeler {
 		List<RankedTitleRGU> tweetScoresRGU = TrendsLabeler.getTweetScores(dysco);
 		Collections.sort(tweetScoresRGU, Collections.reverseOrder());
 		RankedTitleRGU bestRankedTitle = tweetScoresRGU.get(0);
+                Item selItem=bestRankedTitle.getItem();
+                
+                if(selItem!=null){
+                    System.out.println("SELECTED ID: "+selItem.getId());
+                    System.out.println("SELECTED text original: "+selItem.getTitle());
+                    String author=selItem.getAuthorFullName();
+                    if((author==null)||(author.trim().equals("")))
+                        author=selItem.getAuthorScreenName();
+                    dysco.setAuthor(author);
+                    URL[] urls=selItem.getLinks();
+                    String mainURL=null;
+                    String storyType=null;
+                    if((urls!=null)&&(urls.length>0)){
+                        String url_original=urls[0].toString();
+                        String expandedURL=null;
+                        mainURL=url_original;
+                        //mainURL=URLDeshortener.expandFromManos(mainURL);
+
+                        //First check using the content type http header
+                        int redirects = 0;
+                        int max_redirects=5;
+                        HttpURLConnection connection;
+                        while(true && redirects < max_redirects) {
+                            try {
+                                URL url = new URL(mainURL);
+                                connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+                                connection.setInstanceFollowRedirects(false);
+                                connection.setReadTimeout(2000);
+                                connection.connect();
+                                expandedURL = connection.getHeaderField("Location");
+                                if(expandedURL == null) {
+                                    storyType=connection.getContentType();
+                                    break;
+                                }
+                                else {
+                                    mainURL = expandedURL;
+                                    redirects++;
+                                }
+                            }
+                            catch(Exception e) {
+                                return null;
+                            }
+                        }
+                        if(storyType!=null){
+                            if((!storyType.startsWith("image"))&&(!storyType.startsWith("video")))
+                                storyType=null;
+                            else if(storyType.startsWith("image")) 
+                                storyType="image";
+                            else if(storyType.startsWith("video")) 
+                                storyType="video";
+                        }
+                        //If the content type header fails, we use the retrievers provided by Manos
+                        String mainURLtmp=mainURL;
+                        if((storyType==null) && (mainURL!=null)) {
+                            mainURL=MediaURLProcessor.getMediaItemsURL(mainURLtmp);
+                            if(mainURL!=null) storyType=MediaURLProcessor.getMediaItemsType(mainURLtmp);
+
+                        }                                
+                        if(storyType==null) mainURL=null;
+                        if(mainURL==null) storyType=null;
+                                
+                        
+                    }
+                    
+                    dysco.setMainMediaUrl(mainURL);
+                    dysco.setStoryType(storyType);
+                }            
+                
 		String currentTitleRGU = bestRankedTitle.getTitle();
-		
 		//apply some cleaning
 //		String currentTitleRGUa = Extractor.cleanTextRGU(currentTitleRGU);
 //		System.out.println("This is RGU cleaned     : " + currentTitleRGUa);
@@ -1694,6 +1819,114 @@ public class TrendsLabeler {
 //		System.out.println("This is RGU cleaned MR  : " + currentTitleRGUb + "\n");		
 		return currentTitleRGUb;
 	} 
+ 
+    public static String removeParentheses(String str){
+        String ret_str=str;
+        ret_str.trim();
+        int originalsize=str.length();
+        int pos1_1=ret_str.lastIndexOf("(");
+        int pos1_2=ret_str.lastIndexOf(")");
+//        System.out.println(pos1_1+" / "+pos1_2);
+//        while((pos1_1>-1) && (pos1_2>-1) && (pos1_1<(originalsize/2))){
+        while((pos1_1>-1) && (pos1_2>-1)){
+//        if((pos1_1>-1) && (pos1_2>-1)){
+            String str1=ret_str.substring(pos1_1,pos1_2+1);
+            ret_str=ret_str.replace(str1, "");
+            pos1_1=ret_str.lastIndexOf("(");
+            pos1_2=ret_str.lastIndexOf(")");
+        }
+        
+        int pos2_1=ret_str.lastIndexOf("[");
+        int pos2_2=ret_str.lastIndexOf("]");
+//        if((pos2_1>-1) && (pos2_2>-1)){
+        while((pos2_1>-1) && (pos2_2>-1)){
+            String str2=ret_str.substring(pos2_1,pos2_2+1);
+            ret_str=ret_str.replace(str2, "");
+            pos2_1=ret_str.lastIndexOf("[");
+            pos2_2=ret_str.lastIndexOf("]");
+        }
+        
+        return ret_str;
+    }
+        
+ 
+    public static List<Item> loadItemsFromFile(String filename){
+        List<Item> items=new ArrayList<Item>();
+        try{
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+			new FileInputStream(filename), "UTF8"));
+            //BufferedReader br=new BufferedReader(new FileReader(filename));
+            String line=null;
+            while((line=br.readLine())!=null){
+                if(line.trim()!=""){
+//                    Item new_item=ItemFactory.create(line);
+                    Item new_item=new Item();
+                    DBObject dbObject = (DBObject) JSON.parse(line);
+                    String id=(String) dbObject.get("id_str");
+                    new_item.setId(id);
+                    String text=(String) dbObject.get("text");
+                    new_item.setTitle(text);
+                    String reply_id=(String) dbObject.get("in_reply_to_status_id_str");
+                    new_item.setInReply(reply_id);
+//                    if(reply_id!=null) System.out.println("GOT REPLYYYYYYYYYYYY " +reply_id );
+                    DBObject tmp_obj=(DBObject) dbObject.get("user");
+                    String uploader=(String) tmp_obj.get("screen_name");
+                    new_item.setAuthorScreenName(uploader);
+                    String uploader_full=(String) tmp_obj.get("full_name");
+                    new_item.setAuthorFullName(uploader_full);
+
+                    DBObject objEntities=(DBObject) dbObject.get("entities");
+                    BasicDBList urls = (BasicDBList) objEntities.get("urls");
+                    BasicDBObject[] urlsArr=urls.toArray(new BasicDBObject[0]);
+                    List<String> urlsList=new ArrayList<String>();
+                    for(int pp=0;pp<urlsArr.length;pp++){
+                        String nextURL=(String) urlsArr[pp].get("expanded_url");
+                        if(nextURL==null) nextURL=(String) urlsArr[pp].get("url");
+                        if(nextURL!=null) urlsList.add(nextURL);
+                    }
+                    String[] links=urlsList.toArray(new String[0]);
+                    new_item.setList(links);
+ 
+                    URL[] urlsObjs=new URL[links.length];
+                    for(int s=0;s<links.length;s++){
+                        urlsObjs[s]=new URL(links[s]);
+                    }
+                    new_item.setLinks(urlsObjs);
+                    
+                    BasicDBList hashtagsList = (BasicDBList) objEntities.get("hashtags");
+                    if(hashtagsList!=null){
+                        BasicDBObject[] hashtagsArr=hashtagsList.toArray(new BasicDBObject[0]);
+                        List<String> hashtags=new ArrayList<String>();
+                        for(int pp=0;pp<hashtagsArr.length;pp++){
+                            String nextHashtag=(String) hashtagsArr[pp].get("text");
+                            hashtags.add(nextHashtag);
+                        }
+                        new_item.setKeywords(hashtags);
+                    }
+                    
+                    BasicDBList mediaList = (BasicDBList) objEntities.get("media");
+                    if(mediaList!=null){
+                        BasicDBObject[] mediaArr=mediaList.toArray(new BasicDBObject[0]);
+                        List<String> media=new ArrayList<String>();
+                        for(int pp=0;pp<mediaArr.length;pp++){
+                            String nextMedium=(String) mediaArr[pp].get("media_url");
+                            media.add(nextMedium);
+                        }
+                        new_item.setMediaIds(media);
+                    }                    
+                    
+                    
+                    items.add(new_item);
+                }
+            }
+            br.close();
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return items;
+    }
+    
     
     
 }
