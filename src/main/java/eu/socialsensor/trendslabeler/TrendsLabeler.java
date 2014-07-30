@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
@@ -1722,6 +1723,8 @@ public class TrendsLabeler {
                 Item selItem=bestRankedTitle.getItem();
                 
                 if(selItem!=null){
+                    Logger.getRootLogger().info("TRENDS LABELLER. Text of original tweet used for title: "+selItem.getTitle());
+                    
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
                     String author=selItem.getAuthorFullName();
@@ -1733,6 +1736,7 @@ public class TrendsLabeler {
                     String storyType=null;
                     if((urls!=null)&&(urls.length>0)){
                         String url_original=urls[0].toString();
+                        Logger.getRootLogger().info("TRENDS LABELLER. URL considered for fetching image / video: "+url_original);
                         String expandedURL=null;
                         mainURL=url_original;
                         //mainURL=URLDeshortener.expandFromManos(mainURL);
@@ -1773,10 +1777,13 @@ public class TrendsLabeler {
                         //If the content type header fails, we use the retrievers provided by Manos
                         String mainURLtmp=mainURL;
                         if((storyType==null) && (mainURL!=null)) {
+                            Logger.getRootLogger().info("TRENDS LABELLER. No direct links to images / videos, trying indirectly (via page content).");
                             mainURL=MediaURLProcessor.getMediaItemsURL(mainURLtmp);
                             if(mainURL!=null) storyType=MediaURLProcessor.getMediaItemsType(mainURLtmp);
-
+                            
                         }                                
+                        Logger.getRootLogger().info("TRENDS LABELLER. Main media url: "+ mainURL);
+                        Logger.getRootLogger().info("TRENDS LABELLER. Story type: "+ storyType);
                         if(storyType==null) mainURL=null;
                         if(mainURL==null) storyType=null;
                                 
