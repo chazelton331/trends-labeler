@@ -1734,8 +1734,6 @@ public class TrendsLabeler {
                 if(selItem!=null){
                     Logger.getRootLogger().info("TRENDS LABELLER. Text of original tweet used for title: "+selItem.getTitle());
                     
-                    selItem.getMediaItems().get(0).getUrl();
-                                        
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
                     String author=selItem.getAuthorFullName();
