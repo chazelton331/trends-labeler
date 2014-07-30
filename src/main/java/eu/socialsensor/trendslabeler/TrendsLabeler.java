@@ -1742,6 +1742,7 @@ public class TrendsLabeler {
                     if((author==null)||(author.trim().equals("")))
                         author=selItem.getAuthorScreenName();
                     dysco.setAuthor(author);
+                    System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
                     String mainURL=null;
                     String storyType=null;
@@ -1778,6 +1779,7 @@ public class TrendsLabeler {
                             }
                         }
                         
+                        Logger.getRootLogger().info("TRENDS LABELLER. Will now examine the direct case");
                         if(storyType!=null){
                             if((!storyType.startsWith("image"))&&(!storyType.startsWith("video")))
                                 storyType=null;
@@ -1797,9 +1799,11 @@ public class TrendsLabeler {
                         if((storyType==null) && (selItem.getMediaIds()!=null) && (selItem.getMediaIds().size()>0)) {
                             Logger.getRootLogger().info("TRENDS LABELLER. Will now check for attached images / videos.");
                             String miId=selItem.getMediaIds().get(0);
+                            Logger.getRootLogger().info("TRENDS LABELLER. Media item id: "+miId);
                             if(miDAO!=null){
                                 MediaItem mi=miDAO.getMediaItem(miId);
                                 if(mi!=null){
+                                Logger.getRootLogger().info("TRENDS LABELLER. Getting media url and story type from embedded media item.");
                                     mainURL=mi.getUrl();
                                     storyType=mi.getType();
                                 }
