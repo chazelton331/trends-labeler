@@ -80,7 +80,7 @@ public class TrendsLabeler {
     static MediaItemDAO miDAO;
     static{
         try {    
-            miDAO=new MediaItemDAOImpl("Socialsensordb.atc.gr");
+            miDAO=new MediaItemDAOImpl("socialmdb1.atc.gr","MediaItemsDB","MediaItems");
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(TrendsLabeler.class.getName()).log(Level.SEVERE, null, ex);
         }
