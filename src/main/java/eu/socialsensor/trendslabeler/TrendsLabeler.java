@@ -18,8 +18,11 @@ import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.util.CoreMap;
 import eu.socialsensor.documentpivot.preprocessing.StopWords;
+import eu.socialsensor.framework.client.dao.MediaItemDAO;
+import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 
 import eu.socialsensor.framework.common.domain.Item;
+import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.WebPage;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
@@ -36,6 +39,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 
 import java.util.regex.Matcher;
@@ -73,8 +77,13 @@ public class TrendsLabeler {
 	//	};
 
 	
-	
+    static MediaItemDAO miDAO;
     static{
+        try {    
+            miDAO=new MediaItemDAOImpl("Socialsensordb.atc.gr");
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(TrendsLabeler.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.setProperty ("sun.net.client.defaultReadTimeout", "7000");
         System.setProperty ("sun.net.client.defaultConnectTimeout", "7000");
     }
@@ -1725,6 +1734,8 @@ public class TrendsLabeler {
                 if(selItem!=null){
                     Logger.getRootLogger().info("TRENDS LABELLER. Text of original tweet used for title: "+selItem.getTitle());
                     
+                    selItem.getMediaItems().get(0).getUrl();
+                                        
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
                     String author=selItem.getAuthorFullName();
@@ -1766,6 +1777,7 @@ public class TrendsLabeler {
                                 return null;
                             }
                         }
+                        
                         if(storyType!=null){
                             if((!storyType.startsWith("image"))&&(!storyType.startsWith("video")))
                                 storyType=null;
@@ -1782,6 +1794,18 @@ public class TrendsLabeler {
                             if(mainURL!=null) storyType=MediaURLProcessor.getMediaItemsType(mainURLtmp);
                             
                         }                                
+                        if((storyType==null) && (selItem.getMediaIds()!=null) && (selItem.getMediaIds().size()>0)) {
+                            Logger.getRootLogger().info("TRENDS LABELLER. Will now check for attached images / videos.");
+                            String miId=selItem.getMediaIds().get(0);
+                            if(miDAO!=null){
+                                MediaItem mi=miDAO.getMediaItem(miId);
+                                if(mi!=null){
+                                    mainURL=mi.getUrl();
+                                    storyType=mi.getType();
+                                }
+                            }
+                        }                                
+
                         Logger.getRootLogger().info("TRENDS LABELLER. Main media url: "+ mainURL);
                         Logger.getRootLogger().info("TRENDS LABELLER. Story type: "+ storyType);
                         if(storyType==null) mainURL=null;

@@ -187,6 +187,7 @@ public class MediaURLProcessor {
 //            String url="https://www.facebook.com/photo.php?fbid=7674026193";
             String mediaUrl=MediaURLProcessor.getMediaItemsURL(url);
             String mediaType=MediaURLProcessor.getMediaItemsType(url);
+            
             System.out.println("Original url: "+url);
             System.out.println("Media url: "+mediaUrl);
             System.out.println("Media type: "+mediaType);
