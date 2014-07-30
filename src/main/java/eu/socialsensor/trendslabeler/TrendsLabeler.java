@@ -82,6 +82,7 @@ public class TrendsLabeler {
         try {    
             miDAO=new MediaItemDAOImpl("socialmdb1.atc.gr","MediaItemsDB","MediaItems");
         } catch (Exception ex) {
+            Logger.getRootLogger().info("TRENDS LABELLER. Could not create mediaitemdao object");
             java.util.logging.Logger.getLogger(TrendsLabeler.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.setProperty ("sun.net.client.defaultReadTimeout", "7000");
