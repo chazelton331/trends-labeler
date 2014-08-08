@@ -1745,7 +1745,10 @@ public class TrendsLabeler {
                     if((author==null)||(author.trim().equals("")))
                         author=selItem.getAuthorScreenName();
                     */
-                    String author=selItem.getStreamUser().getUsername();
+                    selItem.getAuthorScreenName();
+                    String author=selItem.getStreamUser().getName();
+                    if((author==null)||(author.trim().equals("")))
+                        author=selItem.getStreamUser().getUsername();
                     dysco.setAuthor(author);
                     System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
