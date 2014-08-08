@@ -18,9 +18,7 @@ import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.util.CoreMap;
 import eu.socialsensor.documentpivot.preprocessing.StopWords;
-import eu.socialsensor.framework.client.dao.ItemDAO;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
-import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 
 import eu.socialsensor.framework.common.domain.Item;
