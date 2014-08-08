@@ -19,11 +19,11 @@ import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.util.CoreMap;
 import eu.socialsensor.documentpivot.preprocessing.StopWords;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
-import eu.socialsensor.framework.client.dao.StreamUserDAO;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
+import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.framework.common.domain.WebPage;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
@@ -1741,14 +1741,18 @@ public class TrendsLabeler {
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
                     
-                    /*
                     String author=selItem.getAuthorFullName();
                     if((author==null)||(author.trim().equals("")))
                         author=selItem.getAuthorScreenName();
+                    /*
+                    String author=null;
+                    StreamUser su=selItem.getStreamUser();
+                    if(su!=null){
+                        author=su.getName();
+                        if((author==null)||(author.trim().equals("")))
+                            author=su.getUsername();
+                    }
                     */
-                    String author=selItem.getStreamUser().getName();
-                    if((author==null)||(author.trim().equals("")))
-                        author=selItem.getStreamUser().getUsername();
                     dysco.setAuthor(author);
                     System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
