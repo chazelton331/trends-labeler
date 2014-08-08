@@ -18,7 +18,9 @@ import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.util.CoreMap;
 import eu.socialsensor.documentpivot.preprocessing.StopWords;
+import eu.socialsensor.framework.client.dao.ItemDAO;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
+import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 
 import eu.socialsensor.framework.common.domain.Item;
@@ -109,15 +111,15 @@ public class TrendsLabeler {
     public static final Set<String> BREAKING_ACCOUNTS = new HashSet<String>(Arrays.asList(BREAKING_ARRAY));    
     public static double url_threshold_similarity=0.2;
 
-    /*
     public static void main(String[] args){
 //        String input="20th #commonwealthgames set to #start today (I am #veryhappy). #blaaa [underway this evening] #cfc #29028 #we ";
 //        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off http://a...";
-        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off...";
+//        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off...";
+        String input="5th anniversary of Sir Bobby Robson's passing today. A gentle man, a great football man, never forgotten. Love to his family and friends.";
         String currentTitleRGUb=getCleanedTitleMR(input);
         System.out.println(currentTitleRGUb);
     }
-*/
+   /* 
     public static void main( String[] args )
     {
         System.out.println("Getting items");
@@ -136,7 +138,7 @@ public class TrendsLabeler {
         System.out.println("Story type: "+newDysco.getStoryType());
         
     }
-    
+*/    
     
     /*public static void main(String[] args){
         ItemDAO itemdao=null;
@@ -1393,9 +1395,11 @@ public class TrendsLabeler {
                                 currentTitleRGUb = currentTitleRGUb.replaceAll("\"", "");
                         Character firstChar = currentTitleRGUb.charAt(0);
                         currentTitleRGUb = Character.toUpperCase(firstChar) + currentTitleRGUb.substring(1);
-
+                        
                         text=currentTitleRGUb=text;
+                        
                         if(endsHellip) text=text+"...";
+                        //System.out.println("CC: "+text);
 		}
 		return text;
 	}
@@ -1737,9 +1741,13 @@ public class TrendsLabeler {
                     
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
+                    
+                    /*
                     String author=selItem.getAuthorFullName();
                     if((author==null)||(author.trim().equals("")))
                         author=selItem.getAuthorScreenName();
+                    */
+                    String author=selItem.getStreamUser().getUsername();
                     dysco.setAuthor(author);
                     System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
@@ -1836,7 +1844,8 @@ public class TrendsLabeler {
 			currentTitleRGUb = currentTitleRGUb.trim().substring(0,
 					currentTitleRGUb.trim().length() - 1) + ".";
 		currentTitleRGUb = currentTitleRGUb.replaceAll("[^\\w\\'\\\"\\?\\)\\]]+$", "");
-		
+
+                /*
 		if (!currentTitleRGUb.matches(".*[\\W]$")) // if there is no symbol at
 			// the end, adds "."
 			currentTitleRGUb = currentTitleRGUb.trim() + ".";
@@ -1849,7 +1858,8 @@ public class TrendsLabeler {
 		
 		if (currentTitleRGUb.length()<3)
 			currentTitleRGUb = currentTitleRGU; //without any cleaning
-		
+		System.out.println("CC: "+currentTitleRGUb);
+                * */
 //		System.out.println("This is RGU cleaned MR  : " + currentTitleRGUb + "\n");		
 		return currentTitleRGUb;
 	} 
