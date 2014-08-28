@@ -19,7 +19,9 @@ import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.util.CoreMap;
 import eu.socialsensor.documentpivot.preprocessing.StopWords;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
+import eu.socialsensor.framework.client.dao.StreamUserDAO;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
+import eu.socialsensor.framework.client.dao.impl.StreamUserDAOImpl;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
@@ -79,9 +81,11 @@ public class TrendsLabeler {
 
 	
     static MediaItemDAO miDAO;
+    static StreamUserDAO suDAO;
     static{
         try {    
             miDAO=new MediaItemDAOImpl("socialmdb1.atc.gr","MediaItemsDB","MediaItems");
+            suDAO=new StreamUserDAOImpl("socialmdb1.atc.gr","StreamUsersDB","StreamUsers");
         } catch (Exception ex) {
             Logger.getRootLogger().info("TRENDS LABELLER. Could not create mediaitemdao object");
             java.util.logging.Logger.getLogger(TrendsLabeler.class.getName()).log(Level.SEVERE, null, ex);
@@ -1741,9 +1745,9 @@ public class TrendsLabeler {
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
                     
-                    String author=selItem.getAuthorFullName();
-                    if((author==null)||(author.trim().equals("")))
-                        author=selItem.getAuthorScreenName();
+                    String author_id=selItem.getUserId();
+                    System.out.println("SELECTED author id: "+author_id);
+                    
                     /*
                     String author=null;
                     StreamUser su=selItem.getStreamUser();
@@ -1753,6 +1757,10 @@ public class TrendsLabeler {
                             author=su.getUsername();
                     }
                     */
+//                    if((author==null)||(author.trim().equals("")))
+  //                      author=selItem.getAuthorScreenName();
+                    StreamUser s_user=suDAO.getStreamUser(author_id);
+                    String author=s_user.getName();
                     dysco.setAuthor(author);
                     System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
@@ -1923,7 +1931,7 @@ public class TrendsLabeler {
                     new_item.setAuthorScreenName(uploader);
                     String uploader_full=(String) tmp_obj.get("full_name");
                     new_item.setAuthorFullName(uploader_full);
-
+                    
                     DBObject objEntities=(DBObject) dbObject.get("entities");
                     BasicDBList urls = (BasicDBList) objEntities.get("urls");
                     BasicDBObject[] urlsArr=urls.toArray(new BasicDBObject[0]);
