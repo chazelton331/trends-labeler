@@ -1759,8 +1759,14 @@ public class TrendsLabeler {
                     */
 //                    if((author==null)||(author.trim().equals("")))
   //                      author=selItem.getAuthorScreenName();
-                    StreamUser s_user=suDAO.getStreamUser(author_id);
-                    String author=s_user.getName();
+                    String author=null;
+                    if((author_id!=null)&&(suDAO!=null)){
+                        StreamUser s_user=suDAO.getStreamUser(author_id);
+                        if(s_user!=null)
+                            author=s_user.getName();
+                        else
+                            System.out.println("User returned from StreamUserDAO was null.");
+                    }
                     dysco.setAuthor(author);
                     System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
