@@ -1745,7 +1745,8 @@ public class TrendsLabeler {
                     System.out.println("SELECTED ID: "+selItem.getId());
                     System.out.println("SELECTED text original: "+selItem.getTitle());
                     
-                    String author_id=selItem.getUserId();
+//                    String author_id=selItem.getUserId();
+                    String author_id=selItem.getReferencedUserId();
                     System.out.println("SELECTED author id: "+author_id);
                     
                     /*
