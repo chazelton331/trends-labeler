@@ -1750,6 +1750,7 @@ public class TrendsLabeler {
                     
 //                    String author_id=selItem.getUserId();
                     String author_id=selItem.getReferencedUserId();
+                    if(author_id==null) author_id=selItem.getUserId();
                     System.out.println("SELECTED author id: "+author_id);
                     
                     /*
