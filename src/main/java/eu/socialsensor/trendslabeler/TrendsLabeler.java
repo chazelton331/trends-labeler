@@ -1766,6 +1766,7 @@ public class TrendsLabeler {
                     String author=null;
                     
                     author=extractUsername(selItem.getTitle());
+                    if(author!=null) System.out.println("Author extracted from tweet: "+author);
                     if((author==null)&&(author_id!=null)&&(suDAO!=null)){
                         StreamUser s_user=suDAO.getStreamUser(author_id);
                         if(s_user!=null)
