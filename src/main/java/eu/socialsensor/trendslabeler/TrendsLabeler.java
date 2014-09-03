@@ -118,9 +118,12 @@ public class TrendsLabeler {
 //        String input="20th #commonwealthgames set to #start today (I am #veryhappy). #blaaa [underway this evening] #cfc #29028 #we ";
 //        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off http://a...";
 //        String input="Qpr supporting bald bloke, slightly past use by date but dont let that put you off...";
-        String input="5th anniversary of Sir Bobby Robson's passing today. A gentle man, a great football man, never forgotten. Love to his family and friends.";
-        String currentTitleRGUb=getCleanedTitleMR(input);
-        System.out.println(currentTitleRGUb);
+//        String input="5th anniversary of Sir Bobby Robson's passing today. A gentle man, a great football man, never forgotten. Love to his family and friends.";
+//        String currentTitleRGUb=getCleanedTitleMR(input);
+//        System.out.println(currentTitleRGUb);
+        System.out.println("Running");
+        String input="RT @LucyMPowell: Nick Clegg can't deliver on his promise for disadvantaged two year olds- families shouldn't be taken in by new ";
+        System.out.println("Author: "+extractUsername(input));
     }
    /* 
     public static void main( String[] args )
@@ -1761,11 +1764,13 @@ public class TrendsLabeler {
 //                    if((author==null)||(author.trim().equals("")))
   //                      author=selItem.getAuthorScreenName();
                     String author=null;
-                    if((author_id!=null)&&(suDAO!=null)){
+                    
+                    author=extractUsername(selItem.getTitle());
+                    if((author==null)&&(author_id!=null)&&(suDAO!=null)){
                         StreamUser s_user=suDAO.getStreamUser(author_id);
                         if(s_user!=null)
                             author=s_user.getName();
-                        else
+                            else
                             System.out.println("User returned from StreamUserDAO was null.");
                     }
                     dysco.setAuthor(author);
@@ -1989,6 +1994,14 @@ public class TrendsLabeler {
             ex.printStackTrace();
         }
         return items;
+    }
+    
+    private static String extractUsername(String text){
+        String author=null;
+        String[] parts=text.split(" ");
+        if((parts.length>1)&&(parts[0].equals("RT")) &&(parts[1].endsWith(":"))&&(parts[1].startsWith("@")))
+            author=parts[1].substring(1,parts[1].length()-1);
+        return author;
     }
     
     
