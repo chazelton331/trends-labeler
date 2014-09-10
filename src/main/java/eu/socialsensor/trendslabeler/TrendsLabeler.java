@@ -1782,12 +1782,15 @@ public class TrendsLabeler {
                     
                     if(titleEntities!=null){
                         for(Entity titleEntity:titleEntities){
+                            String name=titleEntity.getName().toLowerCase();
                             boolean found=false;
                             for(Entity dyscoEntity:dyscoEntities)
-                                if(dyscoEntity.getName().equals(titleEntity.getName()))
+                                if(dyscoEntity.getName().equals(name))
                                     found=true;
-                            if(!found)
+                            if(!found){
+                                titleEntity.setName(name);
                                 dyscoEntities.add(titleEntity);
+                            }
                         }
                     }
                     
