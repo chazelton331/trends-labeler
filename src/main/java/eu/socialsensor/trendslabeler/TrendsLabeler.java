@@ -1776,6 +1776,21 @@ public class TrendsLabeler {
                             System.out.println("User returned from StreamUserDAO was null.");
                     }
                     dysco.setAuthor(author);
+                    
+                    List<Entity> titleEntities=selItem.getEntities();
+                    List<Entity> dyscoEntities=dysco.getEntities();
+                    
+                    if(titleEntities!=null){
+                        for(Entity titleEntity:titleEntities){
+                            boolean found=false;
+                            for(Entity dyscoEntity:dyscoEntities)
+                                if(dyscoEntity.getName().equals(titleEntity.getName()))
+                                    found=true;
+                            if(!found)
+                                dyscoEntities.add(titleEntity);
+                        }
+                    }
+                    
                     System.out.println("SELECTED author: "+author);
                     URL[] urls=selItem.getLinks();
                     String mainURL=null;
