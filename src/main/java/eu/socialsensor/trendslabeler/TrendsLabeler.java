@@ -1882,7 +1882,7 @@ public class TrendsLabeler {
 		
 		String currentTitleRGUb = TrendsLabeler.getCleanedTitleMR(currentTitleRGU);
 		
-		if ((currentTitleRGUb !=null) || (currentTitleRGUb !=""))
+		if ((currentTitleRGUb !=null) && (currentTitleRGUb !=""))
 			currentTitleRGUb = currentTitleRGUb.replaceAll(Extractor.urlRegExp, "");
 		
 		if (currentTitleRGUb.endsWith(":")||currentTitleRGUb.endsWith("-"))
@@ -1890,6 +1890,12 @@ public class TrendsLabeler {
 					currentTitleRGUb.trim().length() - 1) + ".";
 		currentTitleRGUb = currentTitleRGUb.replaceAll("[^\\w\\'\\\"\\?\\)\\]]+$", "");
 
+                if(currentTitleRGUb==null)
+                    Logger.getRootLogger().info("TRENDS LABELLER. Null title. No of items assigned to dysco: "+dysco.getItems().size()+"\n Originally, it was: "+bestRankedTitle.getTitle());
+                if(currentTitleRGUb.equals(""))
+                    Logger.getRootLogger().info("TRENDS LABELLER. Empty string title. No of items assigned to dysco: "+dysco.getItems().size()+"\n Originally, it was: "+bestRankedTitle.getTitle());
+
+                    
                 /*
 		if (!currentTitleRGUb.matches(".*[\\W]$")) // if there is no symbol at
 			// the end, adds "."
