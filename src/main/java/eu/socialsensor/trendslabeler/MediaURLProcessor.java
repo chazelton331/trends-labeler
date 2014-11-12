@@ -16,12 +16,6 @@ import eu.socialsensor.framework.retrievers.socialmedia.InstagramRetriever;
 import eu.socialsensor.framework.retrievers.socialmedia.TwitpicRetriever;
 import eu.socialsensor.framework.retrievers.socialmedia.VimeoRetriever;
 import eu.socialsensor.framework.retrievers.socialmedia.YoutubeRetriever;
-import eu.socialsensor.framework.retrievers.socialmedia.dailymotion.DailyMotionRetriever;
-import eu.socialsensor.framework.retrievers.socialmedia.facebook.FacebookRetriever;
-import eu.socialsensor.framework.retrievers.socialmedia.instagram.InstagramRetriever;
-import eu.socialsensor.framework.retrievers.socialmedia.twitpic.TwitpicRetriever;
-import eu.socialsensor.framework.retrievers.socialmedia.vimeo.VimeoRetriever;
-import eu.socialsensor.framework.retrievers.socialmedia.youtube.YoutubeRetriever;
 
 public class MediaURLProcessor {
 
