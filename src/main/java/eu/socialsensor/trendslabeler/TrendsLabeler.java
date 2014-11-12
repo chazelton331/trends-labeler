@@ -1770,8 +1770,10 @@ public class TrendsLabeler {
                     if(author!=null) System.out.println("Author extracted from tweet: "+author);
                     if((author==null)&&(author_id!=null)&&(suDAO!=null)){
                         StreamUser s_user=suDAO.getStreamUser(author_id);
-                        if(s_user!=null)
+                        if(s_user!=null){
                             author=s_user.getName();
+                            System.out.println("Got author using stream user dao: "+author);
+                        }
                             else
                             System.out.println("User returned from StreamUserDAO was null.");
                     }
