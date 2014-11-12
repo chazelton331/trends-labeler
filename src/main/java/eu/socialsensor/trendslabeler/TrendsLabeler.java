@@ -1801,6 +1801,7 @@ public class TrendsLabeler {
                     if((urls!=null)&&(urls.length>0)){
                         String url_original=urls[0].toString();
                         Logger.getRootLogger().info("TRENDS LABELLER. URL considered for fetching image / video: "+url_original);
+                        System.out.println("TRENDS LABELLER. URL considered for fetching image / video: "+url_original);
                         String expandedURL=null;
                         mainURL=url_original;
                         //mainURL=URLDeshortener.expandFromManos(mainURL);
@@ -1808,8 +1809,10 @@ public class TrendsLabeler {
                         //First check using the content type http header
                         int redirects = 0;
                         int max_redirects=5;
+                        int max_iterations=10;
+                        int iterations=0;
                         HttpURLConnection connection;
-                        while(true && redirects < max_redirects) {
+                        while(true && (redirects < max_redirects) && (iterations<max_iterations)) {
                             try {
                                 URL url = new URL(mainURL);
                                 connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
@@ -1817,13 +1820,14 @@ public class TrendsLabeler {
                                 connection.setReadTimeout(2000);
                                 connection.connect();
                                 expandedURL = connection.getHeaderField("Location");
+                                iterations=iterations+1;
                                 if(expandedURL == null) {
                                     storyType=connection.getContentType();
                                     break;
                                 }
                                 else {
                                     mainURL = expandedURL;
-                                    redirects++;
+                                    redirects=redirects+1;
                                 }
                             }
                             catch(Exception e) {
@@ -1832,6 +1836,7 @@ public class TrendsLabeler {
                         }
                         
                         Logger.getRootLogger().info("TRENDS LABELLER. Will now examine the direct case");
+                        System.out.println("TRENDS LABELLER. Will now examine the direct case");
                         if(storyType!=null){
                             if((!storyType.startsWith("image"))&&(!storyType.startsWith("video")))
                                 storyType=null;
@@ -1912,6 +1917,7 @@ public class TrendsLabeler {
 		System.out.println("CC: "+currentTitleRGUb);
                 * */
 //		System.out.println("This is RGU cleaned MR  : " + currentTitleRGUb + "\n");		
+                System.out.println("TRENDS LABELLER ENDS");
 		return currentTitleRGUb;
 	} 
  
