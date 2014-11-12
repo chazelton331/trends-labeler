@@ -1814,13 +1814,13 @@ public class TrendsLabeler {
                         HttpURLConnection connection;
                         while(true && (redirects < max_redirects) && (iterations<max_iterations)) {
                             try {
+                                iterations=iterations+1;
                                 URL url = new URL(mainURL);
                                 connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
                                 connection.setInstanceFollowRedirects(false);
                                 connection.setReadTimeout(2000);
                                 connection.connect();
                                 expandedURL = connection.getHeaderField("Location");
-                                iterations=iterations+1;
                                 if(expandedURL == null) {
                                     storyType=connection.getContentType();
                                     break;
