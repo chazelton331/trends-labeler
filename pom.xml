@@ -114,7 +114,7 @@
     <dependency>
             <groupId>eu.socialsensor</groupId>
             <artifactId>socialmedia-abstractions</artifactId>
-            <version>0.2</version>
+            <version>0.1-SNAPSHOT</version>
     </dependency>
     
   </dependencies>
